@@ -1,6 +1,7 @@
 {
   "SchemaVersion": 1,
   "ModName": "Physical Dice Mod",
+  "Optional": true,
   "Tabs": [
     {
       "TabName": "Dice Input",
@@ -12,13 +13,23 @@
           "Settings": [
             {
               "Id": "current_roll_value",
-              "Name": "Roll Value",
-              "Type": "int_slider",
+              "Name": "Roll Value (1-20)",
+              "Type": "slider_int",
               "Default": 10,
-              "Min": 1,
-              "Max": 20,
-              "Description": "Set your physical d20 roll result (1-20)",
-              "Tooltip": "Drag the slider or use quick buttons below to set your roll"
+              "Options": {
+                "Min": 1,
+                "Max": 20
+              },
+              "Description": "Slide to set your physical d20 roll result",
+              "Tooltip": "Auto-applies when you release the slider"
+            },
+            {
+              "Id": "apply_button",
+              "Name": "Apply Roll Now",
+              "Type": "event_button",
+              "Default": "",
+              "Description": "Click to apply the current roll value",
+              "Tooltip": "Applies the roll value you entered above"
             },
             {
               "Id": "auto_apply_on_turn",
@@ -37,21 +48,24 @@
             {
               "Id": "quick_roll_1",
               "Name": "Critical Fail (1)",
-              "Type": "button",
+              "Type": "event_button",
+              "Default": "",
               "Description": "Set roll to 1",
               "Tooltip": "Click to set your roll to 1"
             },
             {
               "Id": "quick_roll_10",
               "Name": "Average (10)",
-              "Type": "button",
+              "Type": "event_button",
+              "Default": "",
               "Description": "Set roll to 10",
               "Tooltip": "Click to set your roll to 10"
             },
             {
               "Id": "quick_roll_20",
               "Name": "Critical Success (20)",
-              "Type": "button",
+              "Type": "event_button",
+              "Default": "",
               "Description": "Set roll to 20",
               "Tooltip": "Click to set your roll to 20"
             }
@@ -64,9 +78,11 @@
             {
               "Id": "apply_roll_hotkey",
               "Name": "Apply Roll",
-              "Type": "keybinding",
+              "Type": "keybinding_v2",
               "Default": {
-                "Key": "f9"
+                "Keyboard": {
+                  "Key": "F9"
+                }
               },
               "Description": "Hotkey to apply the current roll value",
               "Tooltip": "Press this key to immediately apply your roll"
@@ -74,9 +90,11 @@
             {
               "Id": "clear_boost_hotkey",
               "Name": "Clear Boost",
-              "Type": "keybinding",
+              "Type": "keybinding_v2",
               "Default": {
-                "Key": "f10"
+                "Keyboard": {
+                  "Key": "F10"
+                }
               },
               "Description": "Hotkey to clear active boost",
               "Tooltip": "Press this key to remove the active boost"
@@ -84,9 +102,11 @@
             {
               "Id": "increment_roll_hotkey",
               "Name": "Increment Roll (+1)",
-              "Type": "keybinding",
+              "Type": "keybinding_v2",
               "Default": {
-                "Key": "equals"
+                "Keyboard": {
+                  "Key": "EQUALS"
+                }
               },
               "Description": "Increase roll value by 1",
               "Tooltip": "Press to increase the roll value"
@@ -94,9 +114,11 @@
             {
               "Id": "decrement_roll_hotkey",
               "Name": "Decrement Roll (-1)",
-              "Type": "keybinding",
+              "Type": "keybinding_v2",
               "Default": {
-                "Key": "minus"
+                "Keyboard": {
+                  "Key": "MINUS"
+                }
               },
               "Description": "Decrease roll value by 1",
               "Tooltip": "Press to decrease the roll value"

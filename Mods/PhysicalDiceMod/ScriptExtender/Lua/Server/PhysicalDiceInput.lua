@@ -113,6 +113,31 @@ Ext.Osiris.RegisterListener("TurnEnded", 1, "after", function(characterGuid)
     end
 end)
 
+-- Register SHORT console command (!r) to apply current MCM slider value
+Ext.RegisterConsoleCommand("r", function(cmd)
+    -- Get value from MCM slider
+    local mcmValue = nil
+    if _G.PhysicalDiceMCM then
+        mcmValue = _G.PhysicalDiceMCM.GetMCMSetting("current_roll_value")
+    end
+
+    if mcmValue and mcmValue >= 1 and mcmValue <= 20 then
+        Log(string.format("✓ Applying MCM slider value: %d", mcmValue))
+
+        -- Apply immediately if it's a party member's turn
+        if currentTurnCharacter and Osi.IsPartyMember(currentTurnCharacter, 1) == 1 then
+            ApplyBoost(currentTurnCharacter, mcmValue)
+            BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", mcmValue))
+        else
+            nextRollValue = mcmValue
+            BroadcastStatus(string.format("Roll %d queued for next turn", mcmValue))
+        end
+    else
+        Log("ERROR: Set slider value in MCM first, then use !r to apply")
+        BroadcastStatus("Set MCM slider first, then use !r")
+    end
+end)
+
 -- Register console command to set roll value
 Ext.RegisterConsoleCommand("setroll", function(cmd, value)
     local rollValue = tonumber(value)

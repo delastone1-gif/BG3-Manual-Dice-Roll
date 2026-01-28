@@ -50,11 +50,14 @@ end
 
 -- Function to apply the current MCM roll value
 local function ApplyMCMRoll()
+    Log("ApplyMCMRoll() called!")
     mcmRollValue = GetMCMSetting("current_roll_value") or 10
+    Log("Got MCM roll value: " .. mcmRollValue)
 
     -- Call the main system's setroll logic
     -- We'll expose this through a global function
     if _G.PhysicalDice then
+        Log("Calling PhysicalDice.SetRoll...")
         _G.PhysicalDice.SetRoll(mcmRollValue)
         Log("Applied roll from MCM: " .. mcmRollValue)
     else
@@ -108,37 +111,18 @@ local function InitializeMCM()
             return
         end
 
-        Log("MCM available! Setting up integration...")
+        Log("MCM available! Setting up server-side integration...")
 
-        -- Register hotkey callbacks
-        if Mods.BG3MCM.MCMAPI.SetKeybindingCallback then
-            -- Apply Roll hotkey
-            Mods.BG3MCM.MCMAPI:SetKeybindingCallback("apply_roll_hotkey", ModuleUUID, function()
-                ApplyMCMRoll()
-            end)
-            Log("Registered Apply Roll hotkey")
-
-            -- Clear Boost hotkey
-            Mods.BG3MCM.MCMAPI:SetKeybindingCallback("clear_boost_hotkey", ModuleUUID, function()
-                ClearMCMBoost()
-            end)
-            Log("Registered Clear Boost hotkey")
-
-            -- Increment hotkey
-            Mods.BG3MCM.MCMAPI:SetKeybindingCallback("increment_roll_hotkey", ModuleUUID, function()
-                IncrementRoll()
-            end)
-            Log("Registered Increment hotkey")
-
-            -- Decrement hotkey
-            Mods.BG3MCM.MCMAPI:SetKeybindingCallback("decrement_roll_hotkey", ModuleUUID, function()
-                DecrementRoll()
-            end)
-            Log("Registered Decrement hotkey")
-        end
+        -- NOTE: Keybindings are registered CLIENT-SIDE in PhysicalDiceMCMClient.lua
+        -- Server-side only handles auto-apply logic and button callbacks (if available)
 
         -- Register button callbacks if available
+        Log("Checking for button callback API...")
+        Log("MCMAPI type: " .. type(Mods.BG3MCM.MCMAPI))
+        Log("SetButtonCallback exists: " .. tostring(Mods.BG3MCM.MCMAPI.SetButtonCallback ~= nil))
+
         if Mods.BG3MCM.MCMAPI.SetButtonCallback then
+            Log("SetButtonCallback is available, registering buttons...")
             -- Quick roll buttons
             Mods.BG3MCM.MCMAPI:SetButtonCallback("quick_roll_1", ModuleUUID, function()
                 SetQuickRoll(1)
@@ -152,7 +136,12 @@ local function InitializeMCM()
                 SetQuickRoll(20)
             end)
 
-            Log("Registered quick roll buttons")
+            -- Apply button
+            Mods.BG3MCM.MCMAPI:SetButtonCallback("apply_button", ModuleUUID, function()
+                ApplyMCMRoll()
+            end)
+
+            Log("Registered quick roll buttons and apply button")
         end
 
         -- Register setting change listener
