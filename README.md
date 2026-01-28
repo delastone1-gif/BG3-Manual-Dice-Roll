@@ -128,11 +128,13 @@ The mod uses BG3's `MinimumRollResult` and `MaximumRollResult` boost system to l
 MinimumRollResult(Attack,15) + MaximumRollResult(Attack,15) = Exactly 15
 ```
 
-This works for:
-- Attack rolls
-- Saving throws
-- Skill checks
-- Ability checks
+**Confirmed working:**
+- ✅ Attack rolls (tested and verified)
+
+**Theoretically supported (not tested):**
+- ❓ Saving throws (boost applied, not confirmed)
+- ❓ Skill checks (boost applied, not confirmed)
+- ❓ Ability checks (boost applied, not confirmed)
 
 ## Technical Details
 
@@ -182,6 +184,8 @@ Divine.exe -g bg3 -a create-package -s ".\Mods\PhysicalDiceMod" -d "PhysicalDice
 
 ## Known Limitations
 
+- **Only attack rolls have been tested and confirmed working**
+  - Saving throws, skill checks, and ability checks have boost code but are unverified
 - Damage rolls are not affected (only d20 rolls)
 - Client-side attack rolls may have slight delays
 
