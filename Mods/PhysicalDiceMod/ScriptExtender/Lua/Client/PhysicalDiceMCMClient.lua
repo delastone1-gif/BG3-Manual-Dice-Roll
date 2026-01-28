@@ -115,83 +115,60 @@ local function RegisterCallbacks()
             Log("SetKeybindingCallback not available")
         end
 
-        -- Register Event Button callbacks (event_button type in blueprint)
+        -- Register Event Button callbacks using MCM.EventButton API
         Log("Setting up event button callbacks...")
 
-        -- Try SetEventButtonCallback API
-        if Mods.BG3MCM.MCMAPI.SetEventButtonCallback then
-            Log("SetEventButtonCallback API found, registering...")
-
-            Mods.BG3MCM.MCMAPI:SetEventButtonCallback("apply_button", ModuleUUID, function()
-                Log("APPLY BUTTON PRESSED!")
-                OnApplyRoll()
-            end)
-
-            Mods.BG3MCM.MCMAPI:SetEventButtonCallback("quick_roll_1", ModuleUUID, function()
-                Log("Quick Roll 1 button pressed")
-                if IsMCMAvailable() then
-                    Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 1, ModuleUUID)
+        local eventButtonSuccess = pcall(function()
+            -- Apply button
+            MCM.EventButton.RegisterCallback({
+                buttonId = "apply_button",
+                callback = function(buttonId, modUUID)
+                    Log("APPLY BUTTON PRESSED!")
                     OnApplyRoll()
                 end
-            end)
+            })
 
-            Mods.BG3MCM.MCMAPI:SetEventButtonCallback("quick_roll_10", ModuleUUID, function()
-                Log("Quick Roll 10 button pressed")
-                if IsMCMAvailable() then
-                    Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 10, ModuleUUID)
-                    OnApplyRoll()
+            -- Quick Roll 1
+            MCM.EventButton.RegisterCallback({
+                buttonId = "quick_roll_1",
+                callback = function(buttonId, modUUID)
+                    Log("Quick Roll 1 button pressed")
+                    if IsMCMAvailable() then
+                        Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 1, ModuleUUID)
+                        OnApplyRoll()
+                    end
                 end
-            end)
+            })
 
-            Mods.BG3MCM.MCMAPI:SetEventButtonCallback("quick_roll_20", ModuleUUID, function()
-                Log("Quick Roll 20 button pressed")
-                if IsMCMAvailable() then
-                    Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 20, ModuleUUID)
-                    OnApplyRoll()
+            -- Quick Roll 10
+            MCM.EventButton.RegisterCallback({
+                buttonId = "quick_roll_10",
+                callback = function(buttonId, modUUID)
+                    Log("Quick Roll 10 button pressed")
+                    if IsMCMAvailable() then
+                        Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 10, ModuleUUID)
+                        OnApplyRoll()
+                    end
                 end
-            end)
+            })
 
-            Log("Event button callbacks registered!")
-        else
-            Log("SetEventButtonCallback not available, trying event subscription...")
-
-            local eventButtonSuccess = pcall(function()
-                if Ext.ModEvents and Ext.ModEvents.BG3MCM then
-                    Ext.ModEvents.BG3MCM["MCMEventButtonPressed"]:Subscribe(function(payload)
-                        if payload and payload.modUUID == ModuleUUID then
-                            Log("EVENT BUTTON PRESSED: " .. tostring(payload.settingId))
-
-                            if payload.settingId == "apply_button" then
-                                Log("APPLY BUTTON PRESSED!")
-                                OnApplyRoll()
-                            elseif payload.settingId == "quick_roll_1" then
-                                Log("Quick Roll 1 button pressed")
-                                if IsMCMAvailable() then
-                                    Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 1, ModuleUUID)
-                                    OnApplyRoll()
-                                end
-                            elseif payload.settingId == "quick_roll_10" then
-                                Log("Quick Roll 10 button pressed")
-                                if IsMCMAvailable() then
-                                    Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 10, ModuleUUID)
-                                    OnApplyRoll()
-                                end
-                            elseif payload.settingId == "quick_roll_20" then
-                                Log("Quick Roll 20 button pressed")
-                                if IsMCMAvailable() then
-                                    Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 20, ModuleUUID)
-                                    OnApplyRoll()
-                                end
-                            end
-                        end
-                    end)
-                    Log("Event button subscriptions registered!")
+            -- Quick Roll 20
+            MCM.EventButton.RegisterCallback({
+                buttonId = "quick_roll_20",
+                callback = function(buttonId, modUUID)
+                    Log("Quick Roll 20 button pressed")
+                    if IsMCMAvailable() then
+                        Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 20, ModuleUUID)
+                        OnApplyRoll()
+                    end
                 end
-            end)
+            })
 
-            if not eventButtonSuccess then
-                Log("Could not subscribe to event button events - buttons will not work")
-            end
+            Log("Event button callbacks registered successfully!")
+        end)
+
+        if not eventButtonSuccess then
+            Log("ERROR: Could not register event button callbacks - MCM.EventButton API not available")
         end
 end
 
