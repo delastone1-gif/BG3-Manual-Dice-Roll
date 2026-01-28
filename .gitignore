@@ -1,19 +1,41 @@
 # BG3 Mod Development - Gitignore
 
-# Backup PAK files
+# Build artifacts
 *.pak
+
+# Claude Code local settings (DO NOT commit these)
+.claude/settings.local.json
 
 # Cheat tables and reference files
 *.CT
 
-# Temp folders
+# Temporary build files
 temp_pack/
 verify_pak/
+/tmp/
+pak_temp/
+lslib/
 
-# VS Code settings (optional)
-.vscode/
+# Backup files
+*.bak
+*.backup
+*~
 
 # System files
 Thumbs.db
 .DS_Store
+desktop.ini
 nul
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Test and debug files
+test_*.lua
+debug_*.lua

@@ -1,18 +1,63 @@
 # BG3 Physical Dice Mod
 
-A Baldur's Gate 3 mod that allows players to use physical dice rolls during combat.
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![BG3](https://img.shields.io/badge/BG3-v4.69.95.620+-green)
+![Script Extender](https://img.shields.io/badge/Script%20Extender-v29+-orange)
+![License](https://img.shields.io/badge/license-MIT-blue)
+
+A Baldur's Gate 3 mod that lets you use **real physical d20 dice** in combat. Roll your dice IRL, input the result, and watch your character use that exact roll in-game!
+
+## Table of Contents
+
+- [Download](#download)
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [MCM Interface (Recommended)](#method-1-mcm-interface-recommended)
+  - [Console Commands](#method-2-console-commands-fallback)
+- [How It Works](#how-it-works)
+- [Development](#development)
+- [Contributing](#contributing)
+- [Support](#support)
+- [Credits](#credits)
+- [License](#license)
+- [Version History](#version-history)
+
+## Download
+
+**Latest Release:** [v1.1.0](../../releases/latest)
+
+Download `PhysicalDiceMod.pak` from the [Releases](../../releases) page.
+
+## Quick Start
+
+1. Install [BG3 Script Extender v29+](https://github.com/Norbyte/bg3se/releases) and [MCM](https://github.com/AtilioA/BG3-MCM)
+2. Download and install `PhysicalDiceMod.pak` to your Mods folder
+3. In-game: Press ESC → Mod Configuration Menu → Physical Dice Mod
+4. During combat: Set slider to your physical d20 roll, press **F9** to apply
+5. Make your attack - the game will use your exact roll!
 
 ## Features
 
-- Input your physical d20 roll results during combat
-- Exact roll matching using Min+Max boost system
-- **MCM (Mod Configuration Menu) integration with in-game UI**
-- **Customizable hotkeys (F9/F10 by default)**
-- **Auto-apply option for automatic roll application**
-- Console command interface (still works as fallback)
-- Instant boost application during your turn
-- One-shot mode: boost applies for one action, then removes itself
-- Supports all party members
+### Core Functionality
+- 🎲 Input your physical d20 roll results during combat
+- 🎯 Exact roll matching using Min+Max boost system
+- ⚡ Instant boost application during your turn
+- 🔄 One-shot mode: boost applies for one action, then removes itself
+- 👥 Supports all party members
+
+### MCM Integration (v1.1.0)
+- 🖱️ **In-game UI with slider control (1-20)**
+- ⌨️ **Customizable hotkeys** (F9 to apply, F10 to clear)
+- 🚀 **Quick roll buttons** for 1, 10, and 20
+- ⬆️⬇️ **Increment/Decrement hotkeys** (+/- keys)
+- 🤖 **Auto-apply option** for automatic roll application
+- 📢 **On-screen notifications**
+
+### Fallback Options
+- 💻 Console command interface (works without MCM)
+- ⚙️ Graceful degradation if MCM not installed
 
 ## Requirements
 
@@ -120,12 +165,19 @@ Mods/PhysicalDiceMod/
 │           └── RollInterceptor.lua
 ```
 
-### Building
+### Building from Source
 
-Use the all-in-one pack command:
+**Requirements:**
+- [LSLib](https://github.com/Norbyte/lslib) (Divine.exe tool)
+
+**Build Process:**
+1. Clone this repository
+2. Modify the Lua files in `Mods/PhysicalDiceMod/ScriptExtender/Lua/`
+3. Use Divine.exe to pack the mod folder into a .pak file:
 
 ```powershell
-New-Item -ItemType Directory -Path 'C:\Users\boris\Desktop\temp_pack\Mods' -Force | Out-Null; Copy-Item 'c:\Projects\BG3 Manual Dice Roll\Mods\PhysicalDiceMod' -Destination 'C:\Users\boris\Desktop\temp_pack\Mods\PhysicalDiceMod' -Recurse -Force; & 'C:\Users\boris\Downloads\LSLib\Packed\Tools\Divine.exe' -g bg3 -a create-package -s 'C:\Users\boris\Desktop\temp_pack' -d 'C:\Users\boris\AppData\Local\Larian Studios\Baldur''s Gate 3\Mods\PhysicalDiceMod.pak' -c lz4; Remove-Item 'C:\Users\boris\Desktop\temp_pack' -Recurse -Force
+# Example pack command (adjust paths as needed)
+Divine.exe -g bg3 -a create-package -s ".\Mods\PhysicalDiceMod" -d "PhysicalDiceMod.pak" -c lz4
 ```
 
 ## Known Limitations
@@ -141,6 +193,25 @@ New-Item -ItemType Directory -Path 'C:\Users\boris\Desktop\temp_pack\Mods' -Forc
 - [ ] Roll history tracking
 - [ ] ImGui UI (if BG3SE v30+ becomes standard)
 
+## Contributing
+
+Contributions are welcome! If you'd like to improve the mod:
+
+1. Fork this repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Support
+
+Having issues? Please [open an issue](../../issues) with:
+- Your BG3 version
+- Script Extender version
+- MCM version (if applicable)
+- Description of the problem
+- Any error messages from the Script Extender console (F3)
+
 ## Credits
 
 - **Script Extender**: [Norbyte](https://github.com/Norbyte/bg3se)
@@ -149,7 +220,7 @@ New-Item -ItemType Directory -Path 'C:\Users\boris\Desktop\temp_pack\Mods' -Forc
 
 ## License
 
-MIT License - Free to use and modify
+MIT License - Free to use and modify. See [LICENSE](LICENSE) for details.
 
 ## Version History
 
