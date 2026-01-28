@@ -35,7 +35,7 @@ Download `PhysicalDiceMod.pak` from the [Releases](../../releases) page.
 1. Install [BG3 Script Extender v29+](https://github.com/Norbyte/bg3se/releases) and [MCM](https://github.com/AtilioA/BG3-MCM)
 2. Download and install `PhysicalDiceMod.pak` to your Mods folder
 3. In-game: Press ESC → Mod Configuration Menu → Physical Dice Mod
-4. During combat: Set slider to your physical d20 roll, press **F9** to apply
+4. During combat: Set slider to your physical d20 roll, **click the Apply button**
 5. Make your attack - the game will use your exact roll!
 
 ## Features
@@ -49,11 +49,11 @@ Download `PhysicalDiceMod.pak` from the [Releases](../../releases) page.
 
 ### MCM Integration (v1.1.0)
 - 🖱️ **In-game UI with slider control (1-20)**
-- ⌨️ **Customizable hotkeys** (F9 to apply, F10 to clear)
-- 🚀 **Quick roll buttons** for 1, 10, and 20
-- ⬆️⬇️ **Increment/Decrement hotkeys** (+/- keys)
+- 🔘 **Apply button** - Click to apply your roll value
+- 🚀 **Quick roll buttons** for 1, 10, and 20 (instant application)
 - 🤖 **Auto-apply option** for automatic roll application
 - 📢 **On-screen notifications**
+- ⌨️ **Hotkey configuration available** (customizable in MCM settings)
 
 ### Fallback Options
 - 💻 Console command interface (works without MCM)
@@ -86,22 +86,22 @@ Download `PhysicalDiceMod.pak` from the [Releases](../../releases) page.
 1. Press ESC in-game
 2. Select "Mod Configuration Menu"
 3. Find "Physical Dice Mod"
-4. Customize your hotkeys if desired (default: F9 to apply, F10 to clear)
+4. (Optional) Customize hotkeys in Hotkeys section
 
 **During Combat:**
 1. Your turn starts
 2. Roll your physical d20 (e.g., you roll a 15)
-3. **Option A:** Use the slider in MCM to set 15, then press F9
-4. **Option B:** Enable "Auto-Apply on Your Turn" in MCM, set slider before your turn starts
-5. Make your attack - the roll will be EXACTLY 15
+3. **Option A - Slider:** Set slider to 15, then **click the Apply button**
+4. **Option B - Quick Roll:** Click the **"15" button** (or any 1-20 value buttons)
+5. **Option C - Auto-Apply:** Enable "Auto-Apply on Your Turn", set value before your turn
+6. Make your attack - the roll will be EXACTLY 15
 
 **MCM Features:**
-- Slider control (1-20)
-- Quick buttons for critical fail (1), average (10), and critical success (20)
-- Customizable hotkeys
-- Auto-apply option
-- Increment/Decrement hotkeys (=/- keys by default)
+- Slider control (1-20) with Apply button
+- Quick roll buttons for 1, 10, and 20 (click for instant application)
+- Auto-apply option (automatically applies roll at turn start)
 - On-screen notifications
+- Hotkey configuration (can be customized in MCM)
 
 ### Method 2: Console Commands (Fallback)
 
@@ -188,7 +188,8 @@ Divine.exe -g bg3 -a create-package -s ".\Mods\PhysicalDiceMod" -d "PhysicalDice
 ## Future Plans
 
 - [x] MCM (Mod Configuration Menu) integration (Completed in v1.1.0)
-- [x] Hotkey support (Completed in v1.1.0)
+- [x] Clickable buttons for quick rolls (Completed in v1.1.0)
+- [ ] Working hotkey support
 - [ ] Damage roll support
 - [ ] Roll history tracking
 - [ ] ImGui UI (if BG3SE v30+ becomes standard)
@@ -227,11 +228,11 @@ MIT License - Free to use and modify. See [LICENSE](LICENSE) for details.
 ### v1.1.0 (Current - MCM Integration)
 - **Added MCM (Mod Configuration Menu) integration**
 - In-game UI with slider control (1-20)
-- Customizable hotkeys (F9/F10 defaults)
+- Clickable Apply button to apply roll values
+- Quick roll buttons (1, 10, 20) with instant application
 - Auto-apply option for automatic roll application
-- Quick roll buttons (1, 10, 20)
-- Increment/Decrement hotkeys (=/-)
 - On-screen notifications
+- Hotkey configuration UI (for future implementation)
 - Console commands still work as fallback
 - Graceful degradation if MCM not installed
 

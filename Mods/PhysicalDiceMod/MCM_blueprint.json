@@ -21,7 +21,7 @@
                 "Max": 20
               },
               "Description": "",
-              "Tooltip": "Set value, then Apply (F9)"
+              "Tooltip": "Set value, then click Apply button"
             },
             {
               "Id": "apply_button",
@@ -34,7 +34,7 @@
                 }
               },
               "Description": "",
-              "Tooltip": "Apply current value (F9)"
+              "Tooltip": "Click to apply current slider value"
             },
             {
               "Id": "quick_roll_1",
