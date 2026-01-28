@@ -24,6 +24,24 @@ local function CreateBoostString(rollValue)
     )
 end
 
+-- Function to broadcast status to all clients
+local function BroadcastStatus(message)
+    local characterName = "None"
+    if currentTurnCharacter and Osi.IsPartyMember(currentTurnCharacter, 1) == 1 then
+        characterName = Osi.GetDisplayName(currentTurnCharacter) or currentTurnCharacter
+    end
+
+    local statusData = {
+        message = message,
+        characterName = characterName,
+        hasActiveBoost = activeBoost ~= nil,
+        hasQueuedRoll = nextRollValue ~= nil,
+        queuedValue = nextRollValue
+    }
+
+    Ext.Net.BroadcastMessage("PhysicalDiceStatus", Ext.Json.Stringify(statusData))
+end
+
 -- Function to apply boost to a character
 local function ApplyBoost(characterGuid, rollValue)
     Log("═══════════════════════════════════════════════")
@@ -58,7 +76,22 @@ Ext.Osiris.RegisterListener("TurnStarted", 1, "after", function(characterGuid)
         -- If there's a queued roll value, apply it now
         if nextRollValue then
             ApplyBoost(characterGuid, nextRollValue)
+            BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", nextRollValue))
             nextRollValue = nil
+        else
+            -- Check if MCM auto-apply is enabled
+            if _G.PhysicalDiceMCM and _G.PhysicalDiceMCM.CheckAutoApply() then
+                local mcmRollValue = _G.PhysicalDiceMCM.GetMCMSetting("current_roll_value")
+                if mcmRollValue and mcmRollValue >= 1 and mcmRollValue <= 20 then
+                    ApplyBoost(characterGuid, mcmRollValue)
+                    BroadcastStatus(string.format("AUTO-APPLIED from MCM: Roll locked to %d", mcmRollValue))
+                    Log("MCM auto-apply activated")
+                else
+                    BroadcastStatus("Your turn - ready for roll input")
+                end
+            else
+                BroadcastStatus("Your turn - ready for roll input")
+            end
         end
     end
 end)
@@ -76,6 +109,7 @@ Ext.Osiris.RegisterListener("TurnEnded", 1, "after", function(characterGuid)
         activeBoost = nil
         activeBoostString = nil
         activeCharacter = nil
+        BroadcastStatus("Turn ended - boost removed")
     end
 end)
 
@@ -86,11 +120,13 @@ Ext.RegisterConsoleCommand("setroll", function(cmd, value)
     if not rollValue then
         Log("ERROR: Invalid roll value. Usage: !setroll <number>")
         Log("Example: !setroll 15")
+        BroadcastStatus("ERROR: Invalid roll value")
         return
     end
 
     if rollValue < 1 or rollValue > 20 then
         Log("ERROR: Roll value must be between 1 and 20")
+        BroadcastStatus("ERROR: Roll must be 1-20")
         return
     end
 
@@ -101,10 +137,12 @@ Ext.RegisterConsoleCommand("setroll", function(cmd, value)
         -- It's a party member's turn RIGHT NOW - apply immediately!
         Log("⚡ Applying boost IMMEDIATELY (it's your turn!)")
         ApplyBoost(currentTurnCharacter, rollValue)
+        BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
     else
         -- Not a party member's turn - queue for next party turn
         nextRollValue = rollValue
         Log("📋 Boost queued - will apply at start of next party member's turn")
+        BroadcastStatus(string.format("Roll %d queued for next turn", rollValue))
     end
 end)
 
@@ -126,6 +164,7 @@ Ext.Osiris.RegisterListener("AttackedBy", 7, "after", function(defender, attacke
                 activeBoost = nil
                 activeBoostString = nil
                 activeCharacter = nil
+                BroadcastStatus("Attack completed - boost removed")
             end
         end)
     end
@@ -145,24 +184,174 @@ end)
 
 -- Register command to clear stored roll value
 Ext.RegisterConsoleCommand("clearroll", function(cmd)
+    local hadSomething = false
+
     if activeBoost then
         Osi.RemoveBoosts(activeCharacter, activeBoostString, 1, "", "")
         Log("Cleared active boost")
         activeBoost = nil
         activeBoostString = nil
         activeCharacter = nil
+        hadSomething = true
     end
 
     if nextRollValue then
         Log(string.format("Cleared queued roll value (%d)", nextRollValue))
         nextRollValue = nil
+        hadSomething = true
     end
 
-    if not activeBoost and not nextRollValue then
+    if hadSomething then
+        BroadcastStatus("Boost cleared")
+    else
         Log("Nothing to clear")
+        BroadcastStatus("No active boost to clear")
     end
 end)
 
+
+------- UI INTEGRATION -------
+
+-- Listen for commands from the UI
+Ext.RegisterNetListener("PhysicalDiceCommand", function(channel, payload, userId)
+    local data = Ext.Json.Parse(payload)
+
+    if data.command == "setroll" then
+        local rollValue = data.value
+
+        if rollValue < 1 or rollValue > 20 then
+            BroadcastStatus("ERROR: Roll value must be between 1 and 20")
+            return
+        end
+
+        Log(string.format("UI: Physical dice roll set to: %d", rollValue))
+
+        -- Check if it's currently a party member's turn
+        if currentTurnCharacter and Osi.IsPartyMember(currentTurnCharacter, 1) == 1 then
+            ApplyBoost(currentTurnCharacter, rollValue)
+            BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
+        else
+            nextRollValue = rollValue
+            BroadcastStatus(string.format("Roll %d queued for next turn", rollValue))
+        end
+
+    elseif data.command == "clearroll" then
+        if activeBoost then
+            Osi.RemoveBoosts(activeCharacter, activeBoostString, 1, "", "")
+            Log("UI: Cleared active boost")
+            activeBoost = nil
+            activeBoostString = nil
+            activeCharacter = nil
+        end
+
+        if nextRollValue then
+            Log(string.format("UI: Cleared queued roll value (%d)", nextRollValue))
+            nextRollValue = nil
+        end
+
+        BroadcastStatus("Boost cleared")
+    end
+end)
+
+-- Track combat state and notify clients
+local inCombat = false
+
+Ext.Osiris.RegisterListener("EnteredCombat", 2, "after", function(characterGuid, combatGuid)
+    local isPlayerCharacter = Osi.IsPartyMember(characterGuid, 1) == 1
+    if isPlayerCharacter and not inCombat then
+        inCombat = true
+        local combatData = {
+            inCombat = true
+        }
+        Ext.Net.BroadcastMessage("PhysicalDiceCombatState", Ext.Json.Stringify(combatData))
+        Log("Combat started - UI should be visible")
+    end
+end)
+
+Ext.Osiris.RegisterListener("LeftCombat", 2, "after", function(characterGuid, combatGuid)
+    local isPlayerCharacter = Osi.IsPartyMember(characterGuid, 1) == 1
+    if isPlayerCharacter then
+        -- Check if any other party member is still in combat
+        local anyInCombat = false
+        -- We'll assume combat ended if this was called
+        inCombat = false
+        local combatData = {
+            inCombat = false
+        }
+        Ext.Net.BroadcastMessage("PhysicalDiceCombatState", Ext.Json.Stringify(combatData))
+        Log("Combat ended - UI should be hidden")
+    end
+end)
+
+-- Console command to toggle UI
+Ext.RegisterConsoleCommand("toggledice", function(cmd)
+    local toggleData = {
+        command = "toggle"
+    }
+    Ext.Net.BroadcastMessage("PhysicalDiceUICommand", Ext.Json.Stringify(toggleData))
+    Log("Toggle UI command sent to clients")
+end)
+
+------- EXPORT API FOR MCM INTEGRATION -------
+
+-- Export functions for MCM integration
+_G.PhysicalDice = {
+    -- Set roll value (called by MCM or console)
+    SetRoll = function(rollValue)
+        if rollValue < 1 or rollValue > 20 then
+            Log("ERROR: Roll value must be between 1 and 20")
+            return false
+        end
+
+        Log(string.format("API: Physical dice roll set to: %d", rollValue))
+
+        -- Check if it's currently a party member's turn
+        if currentTurnCharacter and Osi.IsPartyMember(currentTurnCharacter, 1) == 1 then
+            ApplyBoost(currentTurnCharacter, rollValue)
+            BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
+        else
+            nextRollValue = rollValue
+            BroadcastStatus(string.format("Roll %d queued for next turn", rollValue))
+        end
+        return true
+    end,
+
+    -- Clear roll boost (called by MCM or console)
+    ClearRoll = function()
+        local hadSomething = false
+
+        if activeBoost then
+            Osi.RemoveBoosts(activeCharacter, activeBoostString, 1, "", "")
+            Log("API: Cleared active boost")
+            activeBoost = nil
+            activeBoostString = nil
+            activeCharacter = nil
+            hadSomething = true
+        end
+
+        if nextRollValue then
+            Log(string.format("API: Cleared queued roll value (%d)", nextRollValue))
+            nextRollValue = nil
+            hadSomething = true
+        end
+
+        if hadSomething then
+            BroadcastStatus("Boost cleared")
+        end
+        return hadSomething
+    end,
+
+    -- Check current status
+    GetStatus = function()
+        return {
+            hasActiveBoost = activeBoost ~= nil,
+            hasQueuedRoll = nextRollValue ~= nil,
+            queuedValue = nextRollValue,
+            activeCharacter = activeCharacter,
+            currentTurnCharacter = currentTurnCharacter
+        }
+    end
+}
 
 Log("Physical Dice Input System Loaded!")
 Log("")
@@ -175,11 +364,17 @@ Log("  !checkroll       - Check current boost status")
 Log("  !clearroll       - Clear boost/queued value")
 Log("")
 Log("HOW TO USE:")
-Log("  1. Your turn starts")
-Log("  2. Roll your physical d20 (e.g., you get 15)")
-Log("  3. Type: !setroll 15")
-Log("  4. Boost applies INSTANTLY")
-Log("  5. Make your attack - roll will be EXACTLY 15")
+Log("  Option 1 - MCM (If installed):")
+Log("    - Press ESC > Mod Configuration Menu")
+Log("    - Select 'Physical Dice Mod'")
+Log("    - Use slider or hotkeys (F9/F10)")
+Log("")
+Log("  Option 2 - Console Commands:")
+Log("    1. Your turn starts")
+Log("    2. Roll your physical d20 (e.g., you get 15)")
+Log("    3. Press F3 and type: !setroll 15")
+Log("    4. Boost applies INSTANTLY")
+Log("    5. Make your attack - roll will be EXACTLY 15")
 Log("")
 Log("NOTE: Boost locks roll to EXACT value using Min+Max")
 Log("═══════════════════════════════════════════════")
