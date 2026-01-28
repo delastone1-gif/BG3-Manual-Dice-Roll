@@ -27,11 +27,10 @@
               "Id": "apply_button",
               "Name": "Apply Roll Now",
               "Type": "event_button",
-              "Default": "",
               "Options": {
                 "Label": "Apply Roll",
                 "Icon": {
-                  "Name": "Action_Throw"
+                  "Name": "Skill_Fighter_ActionSurge"
                 }
               },
               "Description": "Click to apply the current roll value",
@@ -55,11 +54,10 @@
               "Id": "quick_roll_1",
               "Name": "Critical Fail (1)",
               "Type": "event_button",
-              "Default": "",
               "Options": {
                 "Label": "Roll 1",
                 "Icon": {
-                  "Name": "PassiveFeature_CriticalFailure"
+                  "Name": "Spell_Necromancy_InflictWounds"
                 }
               },
               "Description": "Set roll to 1",
@@ -69,7 +67,6 @@
               "Id": "quick_roll_10",
               "Name": "Average (10)",
               "Type": "event_button",
-              "Default": "",
               "Options": {
                 "Label": "Roll 10",
                 "Icon": {
@@ -83,11 +80,10 @@
               "Id": "quick_roll_20",
               "Name": "Critical Success (20)",
               "Type": "event_button",
-              "Default": "",
               "Options": {
                 "Label": "Roll 20",
                 "Icon": {
-                  "Name": "PassiveFeature_CriticalHit"
+                  "Name": "Spell_Abjuration_Shield"
                 }
               },
               "Description": "Set roll to 20",
