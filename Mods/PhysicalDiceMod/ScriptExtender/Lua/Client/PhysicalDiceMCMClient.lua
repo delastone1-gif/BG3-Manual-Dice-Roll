@@ -115,47 +115,49 @@ local function RegisterCallbacks()
             Log("SetKeybindingCallback not available")
         end
 
-        -- Register button callbacks (CLIENT-SIDE) - buttons call the same functions as hotkeys!
-        Log("Checking for button callback API (client-side)...")
-        Log("SetButtonCallback exists: " .. tostring(Mods.BG3MCM.MCMAPI.SetButtonCallback ~= nil))
+        -- Subscribe to Event Button events (event_button type in blueprint)
+        Log("Setting up event button subscriptions...")
+        local eventButtonSuccess = pcall(function()
+            if Ext.ModEvents and Ext.ModEvents.BG3MCM then
+                Ext.ModEvents.BG3MCM["MCMEventButtonPressed"]:Subscribe(function(payload)
+                    if payload and payload.modUUID == ModuleUUID then
+                        Log("EVENT BUTTON PRESSED: " .. tostring(payload.settingId))
 
-        if Mods.BG3MCM.MCMAPI.SetButtonCallback then
-            Log("SetButtonCallback is available, registering buttons on CLIENT...")
+                        -- Apply button - applies current slider value
+                        if payload.settingId == "apply_button" then
+                            Log("APPLY BUTTON PRESSED!")
+                            OnApplyRoll()
 
-            -- Apply button - calls same function as F9!
-            Mods.BG3MCM.MCMAPI:SetButtonCallback("apply_button", ModuleUUID, function()
-                Log("APPLY BUTTON PRESSED (calling F9 function)!")
-                OnApplyRoll()
-            end)
+                        -- Quick roll buttons - set value and apply
+                        elseif payload.settingId == "quick_roll_1" then
+                            Log("Quick Roll 1 button pressed")
+                            if IsMCMAvailable() then
+                                Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 1, ModuleUUID)
+                                OnApplyRoll()
+                            end
 
-            -- Quick roll buttons
-            Mods.BG3MCM.MCMAPI:SetButtonCallback("quick_roll_1", ModuleUUID, function()
-                Log("Quick Roll 1 button pressed")
-                if IsMCMAvailable() then
-                    Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 1, ModuleUUID)
-                    OnApplyRoll()  -- Auto-apply after setting
-                end
-            end)
+                        elseif payload.settingId == "quick_roll_10" then
+                            Log("Quick Roll 10 button pressed")
+                            if IsMCMAvailable() then
+                                Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 10, ModuleUUID)
+                                OnApplyRoll()
+                            end
 
-            Mods.BG3MCM.MCMAPI:SetButtonCallback("quick_roll_10", ModuleUUID, function()
-                Log("Quick Roll 10 button pressed")
-                if IsMCMAvailable() then
-                    Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 10, ModuleUUID)
-                    OnApplyRoll()  -- Auto-apply after setting
-                end
-            end)
+                        elseif payload.settingId == "quick_roll_20" then
+                            Log("Quick Roll 20 button pressed")
+                            if IsMCMAvailable() then
+                                Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 20, ModuleUUID)
+                                OnApplyRoll()
+                            end
+                        end
+                    end
+                end)
+                Log("Event button subscriptions registered!")
+            end
+        end)
 
-            Mods.BG3MCM.MCMAPI:SetButtonCallback("quick_roll_20", ModuleUUID, function()
-                Log("Quick Roll 20 button pressed")
-                if IsMCMAvailable() then
-                    Mods.BG3MCM.MCMAPI:SetSettingValue("current_roll_value", 20, ModuleUUID)
-                    OnApplyRoll()  -- Auto-apply after setting
-                end
-            end)
-
-            Log("Registered button callbacks on CLIENT!")
-        else
-            Log("SetButtonCallback not available - buttons will be disabled")
+        if not eventButtonSuccess then
+            Log("Could not subscribe to event button events - buttons will not work")
         end
 end
 

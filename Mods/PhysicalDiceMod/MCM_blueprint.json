@@ -21,7 +21,7 @@
                 "Max": 20
               },
               "Description": "Slide to set your physical d20 roll result",
-              "Tooltip": "Auto-applies when you release the slider"
+              "Tooltip": "Set your roll value, then click Apply or press F9"
             },
             {
               "Id": "apply_button",
