@@ -157,24 +157,6 @@ local function RegisterCallbacks()
         else
             Log("SetButtonCallback not available - buttons will be disabled")
         end
-
-    -- Register setting change listener for auto-commit slider
-    Log("Setting up slider auto-commit...")
-    local settingChangeSuccess = pcall(function()
-        if Ext.ModEvents and Ext.ModEvents.BG3MCM then
-            Ext.ModEvents.BG3MCM["MCMSettingSaved"]:Subscribe(function(payload)
-                if payload and payload.modUUID == ModuleUUID and payload.settingId == "current_roll_value" then
-                    Log("Slider changed to: " .. tostring(payload.value) .. " - auto-applying!")
-                    OnApplyRoll()
-                end
-            end)
-            Log("Slider auto-commit enabled!")
-        end
-    end)
-
-    if not settingChangeSuccess then
-        Log("Could not enable slider auto-commit - manual apply will be required")
-    end
 end
 
 -- Try to register immediately
