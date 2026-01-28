@@ -29,7 +29,10 @@
               "Type": "event_button",
               "Default": "",
               "Options": {
-                "Label": "Apply Roll"
+                "Label": "Apply Roll",
+                "Icon": {
+                  "Name": "Action_Throw"
+                }
               },
               "Description": "Click to apply the current roll value",
               "Tooltip": "Applies the roll value you entered above"
@@ -54,7 +57,10 @@
               "Type": "event_button",
               "Default": "",
               "Options": {
-                "Label": "Roll 1"
+                "Label": "Roll 1",
+                "Icon": {
+                  "Name": "PassiveFeature_CriticalFailure"
+                }
               },
               "Description": "Set roll to 1",
               "Tooltip": "Click to set your roll to 1"
@@ -65,7 +71,10 @@
               "Type": "event_button",
               "Default": "",
               "Options": {
-                "Label": "Roll 10"
+                "Label": "Roll 10",
+                "Icon": {
+                  "Name": "Spell_Divination_Guidance"
+                }
               },
               "Description": "Set roll to 10",
               "Tooltip": "Click to set your roll to 10"
@@ -76,7 +85,10 @@
               "Type": "event_button",
               "Default": "",
               "Options": {
-                "Label": "Roll 20"
+                "Label": "Roll 20",
+                "Icon": {
+                  "Name": "PassiveFeature_CriticalHit"
+                }
               },
               "Description": "Set roll to 20",
               "Tooltip": "Click to set your roll to 20"
