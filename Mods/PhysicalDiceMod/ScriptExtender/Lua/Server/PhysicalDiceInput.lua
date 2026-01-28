@@ -9,9 +9,8 @@ Log("Physical Dice Input System Loading...")
 
 -- Store the next roll value and current turn
 local nextRollValue = nil
-local activeBoost = nil
 local activeBoostString = nil
-local activeCharacter = nil
+local activeBoostedCharacters = {}  -- Track ALL characters with active boosts
 local currentTurnCharacter = nil  -- Track whose turn it is
 
 -- Function to create boost string for a specific roll value
@@ -34,7 +33,7 @@ local function BroadcastStatus(message)
     local statusData = {
         message = message,
         characterName = characterName,
-        hasActiveBoost = activeBoost ~= nil,
+        hasActiveBoost = #activeBoostedCharacters > 0,
         hasQueuedRoll = nextRollValue ~= nil,
         queuedValue = nextRollValue
     }
@@ -42,26 +41,45 @@ local function BroadcastStatus(message)
     Ext.Net.BroadcastMessage("PhysicalDiceStatus", Ext.Json.Stringify(statusData))
 end
 
--- Function to apply boost to a character
-local function ApplyBoost(characterGuid, rollValue)
+-- Function to get all party members
+local function GetAllPartyMembers()
+    local party = {}
+    local players = Osi.DB_Players:Get(nil)
+    for _, playerData in pairs(players) do
+        local characterGuid = playerData[1]
+        if Osi.IsPartyMember(characterGuid, 1) == 1 then
+            table.insert(party, characterGuid)
+        end
+    end
+    return party
+end
+
+-- Function to apply boost to ALL party members
+local function ApplyBoost(rollValue)
     Log("═══════════════════════════════════════════════")
     Log(string.format("🎲 APPLYING PHYSICAL DICE ROLL: %d", rollValue))
     Log("═══════════════════════════════════════════════")
 
-    -- Remove old boost if exists
-    if activeBoost and activeBoostString and activeCharacter then
-        Osi.RemoveBoosts(activeCharacter, activeBoostString, 1, "", "")
-        Log("Removed previous boost")
+    -- Remove old boosts if exist
+    if activeBoostString and #activeBoostedCharacters > 0 then
+        for _, characterGuid in ipairs(activeBoostedCharacters) do
+            Osi.RemoveBoosts(characterGuid, activeBoostString, 1, "", "")
+        end
+        Log(string.format("Removed previous boost from %d party members", #activeBoostedCharacters))
+        activeBoostedCharacters = {}
     end
 
-    -- Apply new boost
+    -- Apply new boost to ALL party members
     activeBoostString = CreateBoostString(rollValue)
-    Osi.AddBoosts(characterGuid, activeBoostString, "", "")
-    activeBoost = characterGuid
-    activeCharacter = characterGuid
+    local partyMembers = GetAllPartyMembers()
 
-    Log(string.format("✅ Boost ACTIVE! Roll LOCKED to EXACTLY %d", rollValue))
-    Log("📺 CHECK IN-GAME: Your dice should show EXACTLY " .. rollValue)
+    for _, characterGuid in ipairs(partyMembers) do
+        Osi.AddBoosts(characterGuid, activeBoostString, "", "")
+        table.insert(activeBoostedCharacters, characterGuid)
+    end
+
+    Log(string.format("✅ Boost ACTIVE on %d party members! Roll LOCKED to EXACTLY %d", #activeBoostedCharacters, rollValue))
+    Log("📺 CHECK IN-GAME: Next party member dice roll should show EXACTLY " .. rollValue)
     Log("═══════════════════════════════════════════════")
 end
 
@@ -75,7 +93,7 @@ Ext.Osiris.RegisterListener("TurnStarted", 1, "after", function(characterGuid)
 
         -- If there's a queued roll value, apply it now
         if nextRollValue then
-            ApplyBoost(characterGuid, nextRollValue)
+            ApplyBoost(nextRollValue)
             BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", nextRollValue))
             nextRollValue = nil
         else
@@ -83,7 +101,7 @@ Ext.Osiris.RegisterListener("TurnStarted", 1, "after", function(characterGuid)
             if _G.PhysicalDiceMCM and _G.PhysicalDiceMCM.CheckAutoApply() then
                 local mcmRollValue = _G.PhysicalDiceMCM.GetMCMSetting("current_roll_value")
                 if mcmRollValue and mcmRollValue >= 1 and mcmRollValue <= 20 then
-                    ApplyBoost(characterGuid, mcmRollValue)
+                    ApplyBoost(mcmRollValue)
                     BroadcastStatus(string.format("AUTO-APPLIED from MCM: Roll locked to %d", mcmRollValue))
                     Log("MCM auto-apply activated")
                 else
@@ -102,13 +120,14 @@ Ext.Osiris.RegisterListener("TurnEnded", 1, "after", function(characterGuid)
         currentTurnCharacter = nil
     end
 
-    -- Remove boost at turn end
-    if activeBoost and characterGuid == activeCharacter then
-        Osi.RemoveBoosts(characterGuid, activeBoostString, 1, "", "")
-        Log("✅ Boost removed at end of turn")
-        activeBoost = nil
+    -- Remove boost at turn end (from all party members)
+    if #activeBoostedCharacters > 0 and activeBoostString then
+        for _, boostedCharacter in ipairs(activeBoostedCharacters) do
+            Osi.RemoveBoosts(boostedCharacter, activeBoostString, 1, "", "")
+        end
+        Log(string.format("✅ Boost removed at end of turn from %d party members", #activeBoostedCharacters))
+        activeBoostedCharacters = {}
         activeBoostString = nil
-        activeCharacter = nil
         BroadcastStatus("Turn ended - boost removed")
     end
 end)
@@ -126,7 +145,7 @@ Ext.RegisterConsoleCommand("r", function(cmd)
 
         -- Apply immediately if it's a party member's turn
         if currentTurnCharacter and Osi.IsPartyMember(currentTurnCharacter, 1) == 1 then
-            ApplyBoost(currentTurnCharacter, mcmValue)
+            ApplyBoost(mcmValue)
             BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", mcmValue))
         else
             nextRollValue = mcmValue
@@ -160,8 +179,8 @@ Ext.RegisterConsoleCommand("setroll", function(cmd, value)
     -- Check if it's currently a party member's turn
     if currentTurnCharacter and Osi.IsPartyMember(currentTurnCharacter, 1) == 1 then
         -- It's a party member's turn RIGHT NOW - apply immediately!
-        Log("⚡ Applying boost IMMEDIATELY (it's your turn!)")
-        ApplyBoost(currentTurnCharacter, rollValue)
+        Log("⚡ Applying boost IMMEDIATELY to ALL party members!")
+        ApplyBoost(rollValue)
         BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
     else
         -- Not a party member's turn - queue for next party turn
@@ -173,22 +192,37 @@ end)
 
 -- Log attacks when boost is active
 Ext.Osiris.RegisterListener("StartAttack", 4, "after", function(target, attackerOwner, attacker, unknown)
-    if activeBoost and attacker == activeCharacter then
-        Log("⚔️  ATTACK STARTED - Boost is ACTIVE for this roll!")
+    -- Check if the attacker has an active boost
+    for _, boostedCharacter in ipairs(activeBoostedCharacters) do
+        if attacker == boostedCharacter then
+            Log("⚔️  ATTACK STARTED - Boost is ACTIVE for this roll!")
+            break
+        end
     end
 end)
 
 -- Remove boost after first attack (one-shot mode)
 Ext.Osiris.RegisterListener("AttackedBy", 7, "after", function(defender, attackerOwner, attacker2, damageType, damageAmount, damageCause, storyActionID)
-    if activeBoost and attackerOwner == activeCharacter then
+    -- Check if the attacker has an active boost
+    local attackerHadBoost = false
+    for _, boostedCharacter in ipairs(activeBoostedCharacters) do
+        if attackerOwner == boostedCharacter then
+            attackerHadBoost = true
+            break
+        end
+    end
+
+    if attackerHadBoost and #activeBoostedCharacters > 0 then
         Ext.Timer.WaitFor(100, function()
-            if activeBoost and activeBoostString and activeCharacter then
-                Osi.RemoveBoosts(activeCharacter, activeBoostString, 1, "", "")
+            if #activeBoostedCharacters > 0 and activeBoostString then
+                -- Remove boost from ALL party members
+                for _, boostedCharacter in ipairs(activeBoostedCharacters) do
+                    Osi.RemoveBoosts(boostedCharacter, activeBoostString, 1, "", "")
+                end
                 Log("✅ Boost removed after attack (one-shot mode)")
                 Log("💡 TIP: Check the dice roll that appeared in-game!")
-                activeBoost = nil
+                activeBoostedCharacters = {}
                 activeBoostString = nil
-                activeCharacter = nil
                 BroadcastStatus("Attack completed - boost removed")
             end
         end)
@@ -197,8 +231,8 @@ end)
 
 -- Register command to check current stored roll value
 Ext.RegisterConsoleCommand("checkroll", function(cmd)
-    if activeBoost then
-        Log("⚡ Boost is CURRENTLY ACTIVE on character: " .. tostring(activeCharacter))
+    if #activeBoostedCharacters > 0 then
+        Log(string.format("⚡ Boost is CURRENTLY ACTIVE on %d party members", #activeBoostedCharacters))
     elseif nextRollValue then
         Log(string.format("📋 Next roll queued: %d", nextRollValue))
         Log("It will apply at the start of the next party member's turn")
@@ -211,12 +245,13 @@ end)
 Ext.RegisterConsoleCommand("clearroll", function(cmd)
     local hadSomething = false
 
-    if activeBoost then
-        Osi.RemoveBoosts(activeCharacter, activeBoostString, 1, "", "")
-        Log("Cleared active boost")
-        activeBoost = nil
+    if #activeBoostedCharacters > 0 and activeBoostString then
+        for _, boostedCharacter in ipairs(activeBoostedCharacters) do
+            Osi.RemoveBoosts(boostedCharacter, activeBoostString, 1, "", "")
+        end
+        Log(string.format("Cleared active boost from %d party members", #activeBoostedCharacters))
+        activeBoostedCharacters = {}
         activeBoostString = nil
-        activeCharacter = nil
         hadSomething = true
     end
 
@@ -253,7 +288,7 @@ Ext.RegisterNetListener("PhysicalDiceCommand", function(channel, payload, userId
 
         -- Check if it's currently a party member's turn
         if currentTurnCharacter and Osi.IsPartyMember(currentTurnCharacter, 1) == 1 then
-            ApplyBoost(currentTurnCharacter, rollValue)
+            ApplyBoost(rollValue)
             BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
         else
             nextRollValue = rollValue
@@ -261,12 +296,13 @@ Ext.RegisterNetListener("PhysicalDiceCommand", function(channel, payload, userId
         end
 
     elseif data.command == "clearroll" then
-        if activeBoost then
-            Osi.RemoveBoosts(activeCharacter, activeBoostString, 1, "", "")
-            Log("UI: Cleared active boost")
-            activeBoost = nil
+        if #activeBoostedCharacters > 0 and activeBoostString then
+            for _, boostedCharacter in ipairs(activeBoostedCharacters) do
+                Osi.RemoveBoosts(boostedCharacter, activeBoostString, 1, "", "")
+            end
+            Log(string.format("UI: Cleared active boost from %d party members", #activeBoostedCharacters))
+            activeBoostedCharacters = {}
             activeBoostString = nil
-            activeCharacter = nil
         end
 
         if nextRollValue then
@@ -332,7 +368,7 @@ _G.PhysicalDice = {
 
         -- Check if it's currently a party member's turn
         if currentTurnCharacter and Osi.IsPartyMember(currentTurnCharacter, 1) == 1 then
-            ApplyBoost(currentTurnCharacter, rollValue)
+            ApplyBoost(rollValue)
             BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
         else
             nextRollValue = rollValue
@@ -345,12 +381,13 @@ _G.PhysicalDice = {
     ClearRoll = function()
         local hadSomething = false
 
-        if activeBoost then
-            Osi.RemoveBoosts(activeCharacter, activeBoostString, 1, "", "")
-            Log("API: Cleared active boost")
-            activeBoost = nil
+        if #activeBoostedCharacters > 0 and activeBoostString then
+            for _, boostedCharacter in ipairs(activeBoostedCharacters) do
+                Osi.RemoveBoosts(boostedCharacter, activeBoostString, 1, "", "")
+            end
+            Log(string.format("API: Cleared active boost from %d party members", #activeBoostedCharacters))
+            activeBoostedCharacters = {}
             activeBoostString = nil
-            activeCharacter = nil
             hadSomething = true
         end
 
@@ -369,10 +406,10 @@ _G.PhysicalDice = {
     -- Check current status
     GetStatus = function()
         return {
-            hasActiveBoost = activeBoost ~= nil,
+            hasActiveBoost = #activeBoostedCharacters > 0,
             hasQueuedRoll = nextRollValue ~= nil,
             queuedValue = nextRollValue,
-            activeCharacter = activeCharacter,
+            activeBoostedCharacters = activeBoostedCharacters,
             currentTurnCharacter = currentTurnCharacter
         }
     end
