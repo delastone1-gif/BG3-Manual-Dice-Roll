@@ -1,0 +1,165 @@
+{
+  "SchemaVersion": 1,
+  "ModName": "Physical Dice",
+  "Optional": true,
+  "Tabs": [
+    {
+      "TabName": "Controls",
+      "TabId": "dice_input",
+      "Sections": [
+        {
+          "SectionName": "Roll Input",
+          "SectionId": "roll_section",
+          "Settings": [
+            {
+              "Id": "current_roll_value",
+              "Name": "d20 Value",
+              "Type": "slider_int",
+              "Default": 10,
+              "Options": {
+                "Min": 1,
+                "Max": 20
+              },
+              "Description": "",
+              "Tooltip": "Set value, then Apply (F9)"
+            },
+            {
+              "Id": "apply_button",
+              "Name": "Apply",
+              "Type": "event_button",
+              "Options": {
+                "Label": "Apply",
+                "Icon": {
+                  "Name": "Skill_Fighter_ActionSurge"
+                }
+              },
+              "Description": "",
+              "Tooltip": "Apply current value (F9)"
+            },
+            {
+              "Id": "quick_roll_1",
+              "Name": "1",
+              "Type": "event_button",
+              "Options": {
+                "Label": "1",
+                "Icon": {
+                  "Name": "Spell_Necromancy_InflictWounds"
+                }
+              },
+              "Description": "",
+              "Tooltip": "Critical fail"
+            },
+            {
+              "Id": "quick_roll_10",
+              "Name": "10",
+              "Type": "event_button",
+              "Options": {
+                "Label": "10",
+                "Icon": {
+                  "Name": "Spell_Divination_Guidance"
+                }
+              },
+              "Description": "",
+              "Tooltip": "Average"
+            },
+            {
+              "Id": "quick_roll_20",
+              "Name": "20",
+              "Type": "event_button",
+              "Options": {
+                "Label": "20",
+                "Icon": {
+                  "Name": "Spell_Evocation_MagicMissile"
+                }
+              },
+              "Description": "",
+              "Tooltip": "Critical success"
+            },
+            {
+              "Id": "auto_apply_on_turn",
+              "Name": "Auto-Apply",
+              "Type": "checkbox",
+              "Default": false,
+              "Description": "",
+              "Tooltip": "Auto-apply on turn start"
+            }
+          ]
+        },
+        {
+          "SectionName": "Hotkeys",
+          "SectionId": "hotkeys",
+          "Settings": [
+            {
+              "Id": "apply_roll_hotkey",
+              "Name": "Apply",
+              "Type": "keybinding_v2",
+              "Default": {
+                "Keyboard": {
+                  "Key": "F9"
+                }
+              },
+              "Description": "",
+              "Tooltip": ""
+            },
+            {
+              "Id": "clear_boost_hotkey",
+              "Name": "Clear",
+              "Type": "keybinding_v2",
+              "Default": {
+                "Keyboard": {
+                  "Key": "F10"
+                }
+              },
+              "Description": "",
+              "Tooltip": ""
+            },
+            {
+              "Id": "increment_roll_hotkey",
+              "Name": "+1",
+              "Type": "keybinding_v2",
+              "Default": {
+                "Keyboard": {
+                  "Key": "EQUALS"
+                }
+              },
+              "Description": "",
+              "Tooltip": ""
+            },
+            {
+              "Id": "decrement_roll_hotkey",
+              "Name": "-1",
+              "Type": "keybinding_v2",
+              "Default": {
+                "Keyboard": {
+                  "Key": "MINUS"
+                }
+              },
+              "Description": "",
+              "Tooltip": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "TabName": "Info",
+      "TabId": "about",
+      "Sections": [
+        {
+          "SectionName": "About",
+          "SectionId": "mod_info",
+          "Settings": [
+            {
+              "Id": "about_text",
+              "Name": "Physical Dice Mod v1.1",
+              "Type": "text",
+              "Default": "Use physical d20 rolls in BG3.\n\n1. Roll physical die\n2. Set value (slider/buttons)\n3. Apply (F9)\n4. Make in-game roll\n\nCommands: !setroll <1-20>, !checkroll, !clearroll",
+              "Description": "",
+              "Tooltip": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

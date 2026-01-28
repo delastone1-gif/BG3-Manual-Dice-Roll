@@ -68,12 +68,7 @@ local function RenderUI()
     end
 
     -- Create window
-    local windowFlags = {
-        "NoCollapse",
-        "AlwaysAutoResize"
-    }
-
-    local openWindow, shouldDraw = Ext.IMGUI.Begin("Physical Dice Input", showWindow, windowFlags)
+    local shouldDraw = Ext.IMGUI.Begin("Physical Dice Input")
 
     if not shouldDraw then
         Ext.IMGUI.End()
@@ -81,9 +76,7 @@ local function RenderUI()
     end
 
     -- Title section
-    Ext.IMGUI.PushStyleColor("Text", 0.2, 0.8, 1.0, 1.0)
-    Ext.IMGUI.Text("🎲 Physical Dice Mod")
-    Ext.IMGUI.PopStyleColor()
+    Ext.IMGUI.Text("=== Physical Dice Mod ===")
     Ext.IMGUI.Separator()
 
     Ext.IMGUI.Spacing()
@@ -93,20 +86,20 @@ local function RenderUI()
     Ext.IMGUI.Spacing()
 
     -- Input field
-    Ext.IMGUI.Text("Enter your physical dice roll:")
-    inputValue = Ext.IMGUI.InputText("##rollvalue", inputValue, 3)
+    Ext.IMGUI.Text("Enter your physical dice roll (1-20):")
+    inputValue = Ext.IMGUI.InputText("##rollvalue", inputValue)
 
     Ext.IMGUI.Spacing()
 
     -- Apply button
-    if Ext.IMGUI.Button("Apply Roll", 120, 30) then
+    if Ext.IMGUI.Button("Apply Roll") then
         SendRollToServer(inputValue)
     end
 
     Ext.IMGUI.SameLine()
 
     -- Clear button
-    if Ext.IMGUI.Button("Clear Boost", 120, 30) then
+    if Ext.IMGUI.Button("Clear Boost") then
         ClearBoost()
     end
 
@@ -119,7 +112,7 @@ local function RenderUI()
 
     -- Row 1: 1-10
     for i = 1, 10 do
-        if Ext.IMGUI.Button(tostring(i), 35, 25) then
+        if Ext.IMGUI.Button(tostring(i)) then
             inputValue = tostring(i)
             SendRollToServer(inputValue)
         end
@@ -127,10 +120,11 @@ local function RenderUI()
             Ext.IMGUI.SameLine()
         end
     end
+    Ext.IMGUI.NewLine()
 
     -- Row 2: 11-20
     for i = 11, 20 do
-        if Ext.IMGUI.Button(tostring(i), 35, 25) then
+        if Ext.IMGUI.Button(tostring(i)) then
             inputValue = tostring(i)
             SendRollToServer(inputValue)
         end
@@ -144,18 +138,14 @@ local function RenderUI()
     Ext.IMGUI.Spacing()
 
     -- Status display
-    Ext.IMGUI.PushStyleColor("Text", 0.2, 1.0, 0.2, 1.0)
-    Ext.IMGUI.TextWrapped(statusMessage)
-    Ext.IMGUI.PopStyleColor()
+    Ext.IMGUI.Text("Status: " .. statusMessage)
 
     Ext.IMGUI.Spacing()
     Ext.IMGUI.Separator()
     Ext.IMGUI.Spacing()
 
     -- Help text
-    Ext.IMGUI.PushStyleColor("Text", 0.7, 0.7, 0.7, 1.0)
-    Ext.IMGUI.TextWrapped("Toggle this window with console command: !toggledice")
-    Ext.IMGUI.PopStyleColor()
+    Ext.IMGUI.Text("Toggle with: !toggledice")
 
     Ext.IMGUI.End()
 end
