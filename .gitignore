@@ -3,8 +3,8 @@
 # Build artifacts
 *.pak
 
-# Claude Code local settings (DO NOT commit these)
-.claude/settings.local.json
+# Claude Code directory (DO NOT commit)
+.claude/
 
 # Cheat tables and reference files
 *.CT
