@@ -1,0 +1,10 @@
+{
+  "DiceInputVM": {
+    "RollValue": {
+      "Type": "Int32"
+    },
+    "SubmitCommand": {
+      "Type": "Command"
+    }
+  }
+}

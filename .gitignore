@@ -1,0 +1,19 @@
+# BG3 Mod Development - Gitignore
+
+# Backup PAK files
+*.pak
+
+# Cheat tables and reference files
+*.CT
+
+# Temp folders
+temp_pack/
+verify_pak/
+
+# VS Code settings (optional)
+.vscode/
+
+# System files
+Thumbs.db
+.DS_Store
+nul
