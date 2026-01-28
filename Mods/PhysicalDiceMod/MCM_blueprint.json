@@ -1,0 +1,151 @@
+{
+  "SchemaVersion": 1,
+  "ModName": "Physical Dice Mod",
+  "Tabs": [
+    {
+      "TabName": "Dice Input",
+      "TabId": "dice_input",
+      "Sections": [
+        {
+          "SectionName": "Current Roll",
+          "SectionId": "current_roll_section",
+          "Settings": [
+            {
+              "Id": "current_roll_value",
+              "Name": "Roll Value",
+              "Type": "int_slider",
+              "Default": 10,
+              "Min": 1,
+              "Max": 20,
+              "Description": "Set your physical d20 roll result (1-20)",
+              "Tooltip": "Drag the slider or use quick buttons below to set your roll"
+            },
+            {
+              "Id": "auto_apply_on_turn",
+              "Name": "Auto-Apply on Your Turn",
+              "Type": "checkbox",
+              "Default": false,
+              "Description": "Automatically apply the roll value when your turn starts",
+              "Tooltip": "If enabled, the roll will apply immediately when your turn begins"
+            }
+          ]
+        },
+        {
+          "SectionName": "Quick Roll Buttons",
+          "SectionId": "quick_buttons",
+          "Settings": [
+            {
+              "Id": "quick_roll_1",
+              "Name": "Critical Fail (1)",
+              "Type": "button",
+              "Description": "Set roll to 1",
+              "Tooltip": "Click to set your roll to 1"
+            },
+            {
+              "Id": "quick_roll_10",
+              "Name": "Average (10)",
+              "Type": "button",
+              "Description": "Set roll to 10",
+              "Tooltip": "Click to set your roll to 10"
+            },
+            {
+              "Id": "quick_roll_20",
+              "Name": "Critical Success (20)",
+              "Type": "button",
+              "Description": "Set roll to 20",
+              "Tooltip": "Click to set your roll to 20"
+            }
+          ]
+        },
+        {
+          "SectionName": "Hotkeys",
+          "SectionId": "hotkeys",
+          "Settings": [
+            {
+              "Id": "apply_roll_hotkey",
+              "Name": "Apply Roll",
+              "Type": "keybinding",
+              "Default": {
+                "Key": "f9"
+              },
+              "Description": "Hotkey to apply the current roll value",
+              "Tooltip": "Press this key to immediately apply your roll"
+            },
+            {
+              "Id": "clear_boost_hotkey",
+              "Name": "Clear Boost",
+              "Type": "keybinding",
+              "Default": {
+                "Key": "f10"
+              },
+              "Description": "Hotkey to clear active boost",
+              "Tooltip": "Press this key to remove the active boost"
+            },
+            {
+              "Id": "increment_roll_hotkey",
+              "Name": "Increment Roll (+1)",
+              "Type": "keybinding",
+              "Default": {
+                "Key": "equals"
+              },
+              "Description": "Increase roll value by 1",
+              "Tooltip": "Press to increase the roll value"
+            },
+            {
+              "Id": "decrement_roll_hotkey",
+              "Name": "Decrement Roll (-1)",
+              "Type": "keybinding",
+              "Default": {
+                "Key": "minus"
+              },
+              "Description": "Decrease roll value by 1",
+              "Tooltip": "Press to decrease the roll value"
+            }
+          ]
+        },
+        {
+          "SectionName": "Display Options",
+          "SectionId": "display_options",
+          "Settings": [
+            {
+              "Id": "show_notifications",
+              "Name": "Show Notifications",
+              "Type": "checkbox",
+              "Default": true,
+              "Description": "Display on-screen notifications for roll changes",
+              "Tooltip": "Show visual feedback when rolls are applied or cleared"
+            },
+            {
+              "Id": "verbose_logging",
+              "Name": "Verbose Console Logging",
+              "Type": "checkbox",
+              "Default": false,
+              "Description": "Enable detailed logging in console (F3)",
+              "Tooltip": "Useful for debugging or seeing detailed information"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "TabName": "About",
+      "TabId": "about",
+      "Sections": [
+        {
+          "SectionName": "Mod Information",
+          "SectionId": "mod_info",
+          "Settings": [
+            {
+              "Id": "about_text",
+              "Name": "Physical Dice Mod",
+              "Type": "text",
+              "Default": "Version 1.1.0\n\nAllows you to use physical dice rolls in Baldur's Gate 3.\n\nHow to use:\n1. Roll your physical d20\n2. Set the value using the slider or hotkeys\n3. Press Apply Roll hotkey (F9) or let it auto-apply\n4. Make your in-game roll\n\nConsole commands still work:\n!setroll <1-20> - Set roll value\n!checkroll - Check status\n!clearroll - Clear boost",
+              "Description": "",
+              "Tooltip": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
