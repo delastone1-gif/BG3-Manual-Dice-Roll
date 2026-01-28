@@ -190,12 +190,24 @@ Ext.RegisterConsoleCommand("setroll", function(cmd, value)
     end
 end)
 
+-- Track attack data for logging
+local pendingAttackData = {}
+
 -- Log attacks when boost is active
 Ext.Osiris.RegisterListener("StartAttack", 4, "after", function(target, attackerOwner, attacker, unknown)
     -- Check if the attacker has an active boost
     for _, boostedCharacter in ipairs(activeBoostedCharacters) do
         if attacker == boostedCharacter then
-            Log("⚔️  ATTACK STARTED - Boost is ACTIVE for this roll!")
+            local attackerName = Osi.GetDisplayName(attackerOwner) or "Unknown"
+            local targetName = Osi.GetDisplayName(target) or "Unknown"
+            Log(string.format("⚔️  ATTACK: %s → %s (Boost ACTIVE)", attackerName, targetName))
+
+            -- Store attack info for result logging
+            pendingAttackData[attackerOwner] = {
+                attacker = attackerName,
+                target = targetName,
+                expectedRoll = activeBoostString and activeBoostString:match("MinimumRollResult%(Attack,(%d+)%)") or "?"
+            }
             break
         end
     end
@@ -212,6 +224,17 @@ Ext.Osiris.RegisterListener("AttackedBy", 7, "after", function(defender, attacke
         end
     end
 
+    -- Log attack result if we have stored data
+    if pendingAttackData[attackerOwner] then
+        local attackData = pendingAttackData[attackerOwner]
+        local hit = damageAmount > 0
+        local result = hit and "✅ HIT" or "❌ MISS"
+        local dmgText = hit and string.format(" - Damage: %d %s", damageAmount, damageType) or ""
+
+        Log(string.format("🎯 RESULT: %s%s (Expected roll: %s)", result, dmgText, attackData.expectedRoll))
+        pendingAttackData[attackerOwner] = nil
+    end
+
     if attackerHadBoost and #activeBoostedCharacters > 0 then
         Ext.Timer.WaitFor(100, function()
             if #activeBoostedCharacters > 0 and activeBoostString then
@@ -220,7 +243,6 @@ Ext.Osiris.RegisterListener("AttackedBy", 7, "after", function(defender, attacke
                     Osi.RemoveBoosts(boostedCharacter, activeBoostString, 1, "", "")
                 end
                 Log("✅ Boost removed after attack (one-shot mode)")
-                Log("💡 TIP: Check the dice roll that appeared in-game!")
                 activeBoostedCharacters = {}
                 activeBoostString = nil
                 BroadcastStatus("Attack completed - boost removed")
