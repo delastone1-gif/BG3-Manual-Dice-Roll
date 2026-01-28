@@ -83,7 +83,7 @@
               "Options": {
                 "Label": "Roll 20",
                 "Icon": {
-                  "Name": "Spell_Abjuration_Shield"
+                  "Name": "Spell_Evocation_MagicMissile"
                 }
               },
               "Description": "Set roll to 20",
