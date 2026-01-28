@@ -28,6 +28,9 @@
               "Name": "Apply Roll Now",
               "Type": "event_button",
               "Default": "",
+              "Options": {
+                "Label": "Apply Roll"
+              },
               "Description": "Click to apply the current roll value",
               "Tooltip": "Applies the roll value you entered above"
             },
@@ -50,6 +53,9 @@
               "Name": "Critical Fail (1)",
               "Type": "event_button",
               "Default": "",
+              "Options": {
+                "Label": "Roll 1"
+              },
               "Description": "Set roll to 1",
               "Tooltip": "Click to set your roll to 1"
             },
@@ -58,6 +64,9 @@
               "Name": "Average (10)",
               "Type": "event_button",
               "Default": "",
+              "Options": {
+                "Label": "Roll 10"
+              },
               "Description": "Set roll to 10",
               "Tooltip": "Click to set your roll to 10"
             },
@@ -66,6 +75,9 @@
               "Name": "Critical Success (20)",
               "Type": "event_button",
               "Default": "",
+              "Options": {
+                "Label": "Roll 20"
+              },
               "Description": "Set roll to 20",
               "Tooltip": "Click to set your roll to 20"
             }
