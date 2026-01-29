@@ -1,11 +1,11 @@
 # BG3 Physical Dice Mod
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.1-blue)
 ![BG3](https://img.shields.io/badge/BG3-v4.69.95.620+-green)
 ![Script Extender](https://img.shields.io/badge/Script%20Extender-v29+-orange)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-A Baldur's Gate 3 mod that lets you use **real physical dice** in combat - both **d20 attack rolls** and **damage rolls**! Roll your dice IRL, input the results, and watch your character use those exact values in-game!
+A Baldur's Gate 3 mod that lets you use **real physical d20 dice** in combat. Roll your dice IRL, input the result, and watch your character use that exact roll in-game!
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@ A Baldur's Gate 3 mod that lets you use **real physical dice** in combat - both 
 
 ## Download
 
-**Latest Release:** [v1.2.0](../../releases/latest)
+**Latest Release:** [v1.1.1](../../releases/latest)
 
 Download `PhysicalDiceMod.pak` from the [Releases](../../releases) page.
 
@@ -35,32 +35,24 @@ Download `PhysicalDiceMod.pak` from the [Releases](../../releases) page.
 1. Install [BG3 Script Extender v29+](https://github.com/Norbyte/bg3se/releases) and [MCM](https://github.com/AtilioA/BG3-MCM)
 2. Download and install `PhysicalDiceMod.pak` to your Mods folder
 3. In-game: Press ESC → Mod Configuration Menu → Physical Dice Mod
-4. During combat:
-   - **Attack Rolls:** Controls tab → Set slider to your d20 roll → Click Apply
-   - **Damage Rolls:** Damage tab → Set slider to your damage total → Click Apply
-5. Make your attack - the game will use your exact rolls!
+4. During combat: Set slider to your physical d20 roll, **click the Apply button**
+5. Make your attack - the game will use your exact roll!
 
 ## Features
 
 ### Core Functionality
 - 🎲 Input your physical d20 roll results during combat
-- 💥 **NEW in v1.2.0:** Input damage roll results (1-80 range)
 - 🎯 Exact roll matching using Min+Max boost system
 - ⚡ Instant boost application during your turn
 - 🔄 One-shot mode: boost applies for one action, then removes itself
 - 👥 Supports all party members
 - 💾 Works correctly when loading saves mid-combat (fixed in v1.1.1)
-- 🛡️ **Built-in anti-cheat:** Game enforces natural damage caps per spell/weapon
 
-### MCM Integration
-- 🖱️ **In-game UI with slider controls**
-  - **Controls tab:** d20 rolls (1-20)
-  - **Damage tab:** Damage rolls (1-80) - **NEW in v1.2.0**
-- 🔘 **Apply buttons** - Click to apply your roll values
-- 🚀 **Quick roll buttons**
-  - Controls: 1, 10, 20 (critical fail, average, critical success)
-  - Damage: 10, 40, 80 (low, average, high) - **NEW in v1.2.0**
-- 🤖 **Auto-apply option** for automatic attack roll application
+### MCM Integration (v1.1.0)
+- 🖱️ **In-game UI with slider control (1-20)**
+- 🔘 **Apply button** - Click to apply your roll value
+- 🚀 **Quick roll buttons** for 1, 10, and 20 (instant application)
+- 🤖 **Auto-apply option** for automatic roll application
 - 📢 **On-screen notifications**
 - ⌨️ **Hotkey configuration available** (customizable in MCM settings)
 
@@ -125,45 +117,25 @@ If you don't have MCM installed:
 
 ### Commands
 
-**Attack Rolls:**
-- `!setroll <1-20>` - Set your physical d20 roll
-- `!r` - Apply current MCM slider value
+- `!setroll <1-20>` - Set your physical dice roll
 - `!checkroll` - Check current boost status
-- `!clearroll` - Clear attack boost
-
-**Damage Rolls (NEW in v1.2.0):**
-- `!setdamage <1-80>` - Set your physical damage roll
-- `!cleardamage` - Clear damage boost
+- `!clearroll` - Clear boost/queued value
 
 ## How It Works
 
-The mod uses BG3's `MinimumRollResult` and `MaximumRollResult` boost system to lock rolls to exact values:
+The mod uses BG3's `MinimumRollResult` and `MaximumRollResult` boost system to lock dice rolls to exact values:
 
-**Attack Rolls (d20):**
 ```lua
 MinimumRollResult(Attack,15) + MaximumRollResult(Attack,15) = Exactly 15
 ```
 
-**Damage Rolls (NEW in v1.2.0):**
-```lua
-MinimumRollResult(Damage,35) + MaximumRollResult(Damage,35) = Exactly 35
-```
+**Confirmed working:**
+- ✅ Attack rolls (tested and verified)
 
-**✅ Confirmed Working:**
-- Attack rolls (d20)
-- Damage rolls with built-in anti-cheat (game enforces spell/weapon max damage)
-
-**❓ Theoretically Supported (not extensively tested):**
-- Saving throws (boost applied, not confirmed)
-- Skill checks (boost applied, not confirmed)
-- Ability checks (boost applied, not confirmed)
-
-**🛡️ Anti-Cheat Discovery:**
-Even if you set damage to 80, the game enforces natural maximums:
-- Fireball (8d6) caps at 48 damage
-- Magic Missile (1d4+1) caps at 5 per missile
-- Weapon attacks cap at weapon die + modifiers
-This prevents cheating while still allowing you to match your physical dice rolls!
+**Theoretically supported (not tested):**
+- ❓ Saving throws (boost applied, not confirmed)
+- ❓ Skill checks (boost applied, not confirmed)
+- ❓ Ability checks (boost applied, not confirmed)
 
 ## Technical Details
 
@@ -258,21 +230,7 @@ MIT License - Free to use and modify. See [LICENSE](LICENSE) for details.
 
 ## Version History
 
-### v1.2.0 (Current)
-- **🎉 MAJOR FEATURE: Damage Roll Support**
-- Added damage roll input system (1-80 range)
-- New "Damage" tab in MCM with slider and quick buttons (10, 40, 80)
-- Console commands: `!setdamage`, `!cleardamage`
-- Independent boost tracking for attack and damage rolls
-- Both boosts can be active simultaneously
-- Extended API: `SetDamage()`, `ClearDamage()`, updated `GetStatus()`
-- **🛡️ Discovered built-in anti-cheat:** Game enforces natural damage caps per spell/weapon
-- Perfect for weapon attacks (d20 + damage) and damage-only spells (Fireball, Acid Splash)
-- Supports matching physical dice damage rolls to in-game results
-- One-shot removal for both attack and damage boosts
-- No cheating possible - damage cannot exceed spell/weapon maximums
-
-### v1.1.1
+### v1.1.1 (Current)
 - **Fixed critical mid-combat save load bug**
 - Boosts now apply immediately after loading a save during combat
 - Removed turn-based queuing system that caused issues with save/load
