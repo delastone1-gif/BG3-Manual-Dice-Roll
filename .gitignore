@@ -44,3 +44,5 @@ debug_*.lua
 build.ps1
 build.bat
 BUILD.md
+pack_mod.sh
+PACKING_MODS.md
