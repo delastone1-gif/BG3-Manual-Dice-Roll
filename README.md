@@ -1,6 +1,6 @@
 # BG3 Physical Dice Mod
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.1-blue)
 ![BG3](https://img.shields.io/badge/BG3-v4.69.95.620+-green)
 ![Script Extender](https://img.shields.io/badge/Script%20Extender-v29+-orange)
 ![License](https://img.shields.io/badge/license-MIT-blue)
@@ -26,7 +26,7 @@ A Baldur's Gate 3 mod that lets you use **real physical d20 dice** in combat. Ro
 
 ## Download
 
-**Latest Release:** [v1.1.0](../../releases/latest)
+**Latest Release:** [v1.1.1](../../releases/latest)
 
 Download `PhysicalDiceMod.pak` from the [Releases](../../releases) page.
 
@@ -46,6 +46,7 @@ Download `PhysicalDiceMod.pak` from the [Releases](../../releases) page.
 - ⚡ Instant boost application during your turn
 - 🔄 One-shot mode: boost applies for one action, then removes itself
 - 👥 Supports all party members
+- 💾 Works correctly when loading saves mid-combat (fixed in v1.1.1)
 
 ### MCM Integration (v1.1.0)
 - 🖱️ **In-game UI with slider control (1-20)**
@@ -229,7 +230,13 @@ MIT License - Free to use and modify. See [LICENSE](LICENSE) for details.
 
 ## Version History
 
-### v1.1.0 (Current - MCM Integration)
+### v1.1.1 (Current)
+- **Fixed critical mid-combat save load bug**
+- Boosts now apply immediately after loading a save during combat
+- Removed turn-based queuing system that caused issues with save/load
+- Improved reliability of boost application regardless of turn state
+
+### v1.1.0 (MCM Integration)
 - **Added MCM (Mod Configuration Menu) integration**
 - In-game UI with slider control (1-20)
 - Clickable Apply button to apply roll values
