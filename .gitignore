@@ -39,3 +39,8 @@ nul
 # Test and debug files
 test_*.lua
 debug_*.lua
+
+# Local build scripts (user-specific paths)
+build.ps1
+build.bat
+BUILD.md

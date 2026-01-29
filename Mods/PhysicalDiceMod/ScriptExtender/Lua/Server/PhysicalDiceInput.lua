@@ -91,25 +91,18 @@ Ext.Osiris.RegisterListener("TurnStarted", 1, "after", function(characterGuid)
     if isPlayerCharacter then
         Log(string.format("🔄 Party member turn started: %s", characterGuid))
 
-        -- If there's a queued roll value, apply it now
-        if nextRollValue then
-            ApplyBoost(nextRollValue)
-            BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", nextRollValue))
-            nextRollValue = nil
-        else
-            -- Check if MCM auto-apply is enabled
-            if _G.PhysicalDiceMCM and _G.PhysicalDiceMCM.CheckAutoApply() then
-                local mcmRollValue = _G.PhysicalDiceMCM.GetMCMSetting("current_roll_value")
-                if mcmRollValue and mcmRollValue >= 1 and mcmRollValue <= 20 then
-                    ApplyBoost(mcmRollValue)
-                    BroadcastStatus(string.format("AUTO-APPLIED from MCM: Roll locked to %d", mcmRollValue))
-                    Log("MCM auto-apply activated")
-                else
-                    BroadcastStatus("Your turn - ready for roll input")
-                end
+        -- Check if MCM auto-apply is enabled
+        if _G.PhysicalDiceMCM and _G.PhysicalDiceMCM.CheckAutoApply() then
+            local mcmRollValue = _G.PhysicalDiceMCM.GetMCMSetting("current_roll_value")
+            if mcmRollValue and mcmRollValue >= 1 and mcmRollValue <= 20 then
+                ApplyBoost(mcmRollValue)
+                BroadcastStatus(string.format("AUTO-APPLIED from MCM: Roll locked to %d", mcmRollValue))
+                Log("MCM auto-apply activated")
             else
                 BroadcastStatus("Your turn - ready for roll input")
             end
+        else
+            BroadcastStatus("Your turn - ready for roll input")
         end
     end
 end)
@@ -143,14 +136,9 @@ Ext.RegisterConsoleCommand("r", function(cmd)
     if mcmValue and mcmValue >= 1 and mcmValue <= 20 then
         Log(string.format("✓ Applying MCM slider value: %d", mcmValue))
 
-        -- Apply immediately if it's a party member's turn
-        if currentTurnCharacter and Osi.IsPartyMember(currentTurnCharacter, 1) == 1 then
-            ApplyBoost(mcmValue)
-            BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", mcmValue))
-        else
-            nextRollValue = mcmValue
-            BroadcastStatus(string.format("Roll %d queued for next turn", mcmValue))
-        end
+        -- Apply boost immediately - works even when loading mid-combat
+        ApplyBoost(mcmValue)
+        BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", mcmValue))
     else
         Log("ERROR: Set slider value in MCM first, then use !r to apply")
         BroadcastStatus("Set MCM slider first, then use !r")
@@ -176,18 +164,10 @@ Ext.RegisterConsoleCommand("setroll", function(cmd, value)
 
     Log(string.format("✓ Physical dice roll set to: %d", rollValue))
 
-    -- Check if it's currently a party member's turn
-    if currentTurnCharacter and Osi.IsPartyMember(currentTurnCharacter, 1) == 1 then
-        -- It's a party member's turn RIGHT NOW - apply immediately!
-        Log("⚡ Applying boost IMMEDIATELY to ALL party members!")
-        ApplyBoost(rollValue)
-        BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
-    else
-        -- Not a party member's turn - queue for next party turn
-        nextRollValue = rollValue
-        Log("📋 Boost queued - will apply at start of next party member's turn")
-        BroadcastStatus(string.format("Roll %d queued for next turn", rollValue))
-    end
+    -- Apply boost immediately - works even when loading mid-combat
+    Log("⚡ Applying boost IMMEDIATELY to ALL party members!")
+    ApplyBoost(rollValue)
+    BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
 end)
 
 -- Track attack data for logging
@@ -255,11 +235,8 @@ end)
 Ext.RegisterConsoleCommand("checkroll", function(cmd)
     if #activeBoostedCharacters > 0 then
         Log(string.format("⚡ Boost is CURRENTLY ACTIVE on %d party members", #activeBoostedCharacters))
-    elseif nextRollValue then
-        Log(string.format("📋 Next roll queued: %d", nextRollValue))
-        Log("It will apply at the start of the next party member's turn")
     else
-        Log("No roll value set or active. Use !setroll <number> to set one.")
+        Log("No boost currently active. Use !setroll <number> to apply one.")
     end
 end)
 
@@ -308,14 +285,9 @@ Ext.RegisterNetListener("PhysicalDiceCommand", function(channel, payload, userId
 
         Log(string.format("UI: Physical dice roll set to: %d", rollValue))
 
-        -- Check if it's currently a party member's turn
-        if currentTurnCharacter and Osi.IsPartyMember(currentTurnCharacter, 1) == 1 then
-            ApplyBoost(rollValue)
-            BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
-        else
-            nextRollValue = rollValue
-            BroadcastStatus(string.format("Roll %d queued for next turn", rollValue))
-        end
+        -- Apply boost immediately - works even when loading mid-combat
+        ApplyBoost(rollValue)
+        BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
 
     elseif data.command == "clearroll" then
         if #activeBoostedCharacters > 0 and activeBoostString then
@@ -388,14 +360,9 @@ _G.PhysicalDice = {
 
         Log(string.format("API: Physical dice roll set to: %d", rollValue))
 
-        -- Check if it's currently a party member's turn
-        if currentTurnCharacter and Osi.IsPartyMember(currentTurnCharacter, 1) == 1 then
-            ApplyBoost(rollValue)
-            BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
-        else
-            nextRollValue = rollValue
-            BroadcastStatus(string.format("Roll %d queued for next turn", rollValue))
-        end
+        -- Apply boost immediately - works even when loading mid-combat
+        ApplyBoost(rollValue)
+        BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
         return true
     end,
 
