@@ -1,6 +1,6 @@
 # BG3 Physical Dice Mod
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue)
+![Version](https://img.shields.io/badge/version-1.2.1-blue)
 ![BG3](https://img.shields.io/badge/BG3-v4.69.95.620+-green)
 ![Script Extender](https://img.shields.io/badge/Script%20Extender-v29+-orange)
 ![License](https://img.shields.io/badge/license-MIT-blue)
@@ -26,7 +26,7 @@ A Baldur's Gate 3 mod that lets you use **real physical dice** in combat - both 
 
 ## Download
 
-**Latest Release:** [v1.2.0](../../releases/latest)
+**Latest Release:** [v1.2.1](../../releases/latest)
 
 Download `PhysicalDiceMod.pak` from the [Releases](../../releases) page.
 
@@ -258,7 +258,18 @@ MIT License - Free to use and modify. See [LICENSE](LICENSE) for details.
 
 ## Version History
 
-### v1.2.0 (Current)
+### v1.2.1 (Current - Stable)
+- **🔧 CRITICAL FIX: Boost Interference Bug Resolved**
+- Implemented combined boost system - one atomic boost instead of two separate boosts
+- Eliminates boost interference when setting attack roll followed by damage roll (or vice versa)
+- No more timing issues or race conditions
+- Attack and damage values tracked separately but applied as single boost
+- Both boosts remain independent (can clear damage only without affecting attack)
+- Verified working in all scenarios: attack only, damage only, both together
+- Version identifier added to console output for easy verification
+- **Recommended upgrade from v1.2.0** - all users should update immediately
+
+### v1.2.0 (Beta - Superseded by v1.2.1)
 - **🎉 MAJOR FEATURE: Damage Roll Support**
 - Added damage roll input system (1-80 range)
 - New "Damage" tab in MCM with slider and quick buttons (10, 40, 80)

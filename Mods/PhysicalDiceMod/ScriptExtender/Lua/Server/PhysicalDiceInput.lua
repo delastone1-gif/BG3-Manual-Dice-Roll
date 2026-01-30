@@ -1,5 +1,6 @@
 -- PhysicalDiceInput.lua
 -- Console command system for inputting physical dice rolls
+-- v1.2.1: Refactored to use combined boost approach to prevent interference
 
 local function Log(message)
     Ext.Utils.Print("[PhysicalDiceInput] " .. tostring(message))
@@ -9,31 +10,88 @@ Log("Physical Dice Input System Loading...")
 
 -- Store the next roll value and current turn
 local nextRollValue = nil
-local activeBoostString = nil
-local activeBoostedCharacters = {}  -- Track ALL characters with active boosts
 local currentTurnCharacter = nil  -- Track whose turn it is
 
--- Damage boost state (independent from attack rolls)
-local activeDamageBoostString = nil
-local activeDamageBoostedCharacters = {}  -- Track ALL characters with active damage boosts
+-- COMBINED BOOST APPROACH: Track values separately, build one boost
+local currentRollValue = nil      -- nil or 1-20
+local currentDamageValue = nil    -- nil or 1-80
+local activeCombinedBoostString = nil
+local activeBoostedCharacters = {}  -- Track ALL characters with active boosts
 
--- Function to create boost string for a specific roll value
--- Uses BOTH Minimum and Maximum to lock the roll to an exact value
-local function CreateBoostString(rollValue)
-    return string.format(
-        "MinimumRollResult(Attack,%d);MinimumRollResult(RawAbility,%d);MinimumRollResult(SkillCheck,%d);MinimumRollResult(SavingThrow,%d);MaximumRollResult(Attack,%d);MaximumRollResult(RawAbility,%d);MaximumRollResult(SkillCheck,%d);MaximumRollResult(SavingThrow,%d)",
-        rollValue, rollValue, rollValue, rollValue,
-        rollValue, rollValue, rollValue, rollValue
-    )
+-- Function to build combined boost string from current values
+local function BuildCombinedBoost()
+    local parts = {}
+
+    -- Add attack roll parts if roll value is set
+    if currentRollValue then
+        local rollVal = currentRollValue
+        table.insert(parts, string.format("MinimumRollResult(Attack,%d)", rollVal))
+        table.insert(parts, string.format("MaximumRollResult(Attack,%d)", rollVal))
+        table.insert(parts, string.format("MinimumRollResult(RawAbility,%d)", rollVal))
+        table.insert(parts, string.format("MaximumRollResult(RawAbility,%d)", rollVal))
+        table.insert(parts, string.format("MinimumRollResult(SkillCheck,%d)", rollVal))
+        table.insert(parts, string.format("MaximumRollResult(SkillCheck,%d)", rollVal))
+        table.insert(parts, string.format("MinimumRollResult(SavingThrow,%d)", rollVal))
+        table.insert(parts, string.format("MaximumRollResult(SavingThrow,%d)", rollVal))
+    end
+
+    -- Add damage parts if damage value is set
+    if currentDamageValue then
+        local dmgVal = currentDamageValue
+        table.insert(parts, string.format("MinimumRollResult(Damage,%d)", dmgVal))
+        table.insert(parts, string.format("MaximumRollResult(Damage,%d)", dmgVal))
+    end
+
+    if #parts == 0 then
+        return nil  -- No boost to apply
+    end
+
+    return table.concat(parts, ";")
 end
 
--- Function to create damage boost string for a specific damage value
--- Uses BOTH Minimum and Maximum to lock damage to an exact value
-local function CreateDamageBoostString(damageValue)
-    return string.format(
-        "MinimumRollResult(Damage,%d);MaximumRollResult(Damage,%d)",
-        damageValue, damageValue
-    )
+-- Function to apply the combined boost to ALL party members
+local function ApplyCombinedBoost()
+    -- Remove old boost if exists
+    if activeCombinedBoostString and #activeBoostedCharacters > 0 then
+        for _, characterGuid in ipairs(activeBoostedCharacters) do
+            Osi.RemoveBoosts(characterGuid, activeCombinedBoostString, 1, "", "")
+        end
+        activeBoostedCharacters = {}
+    end
+
+    -- Build new combined boost
+    activeCombinedBoostString = BuildCombinedBoost()
+
+    if not activeCombinedBoostString then
+        Log("No boost to apply (both values are nil)")
+        return
+    end
+
+    -- Apply to ALL party members
+    local partyMembers = {}
+    local players = Osi.DB_Players:Get(nil)
+    for _, playerData in pairs(players) do
+        local characterGuid = playerData[1]
+        if Osi.IsPartyMember(characterGuid, 1) == 1 then
+            table.insert(partyMembers, characterGuid)
+        end
+    end
+
+    for _, characterGuid in ipairs(partyMembers) do
+        Osi.AddBoosts(characterGuid, activeCombinedBoostString, "", "")
+        table.insert(activeBoostedCharacters, characterGuid)
+    end
+
+    -- Log what was applied
+    local statusParts = {}
+    if currentRollValue then
+        table.insert(statusParts, string.format("Attack=%d", currentRollValue))
+    end
+    if currentDamageValue then
+        table.insert(statusParts, string.format("Damage=%d", currentDamageValue))
+    end
+    Log(string.format("✅ Combined boost ACTIVE on %d party members [%s]",
+        #activeBoostedCharacters, table.concat(statusParts, ", ")))
 end
 
 -- Function to broadcast status to all clients
@@ -54,73 +112,34 @@ local function BroadcastStatus(message)
     Ext.Net.BroadcastMessage("PhysicalDiceStatus", Ext.Json.Stringify(statusData))
 end
 
--- Function to get all party members
-local function GetAllPartyMembers()
-    local party = {}
-    local players = Osi.DB_Players:Get(nil)
-    for _, playerData in pairs(players) do
-        local characterGuid = playerData[1]
-        if Osi.IsPartyMember(characterGuid, 1) == 1 then
-            table.insert(party, characterGuid)
-        end
-    end
-    return party
-end
-
--- Function to apply boost to ALL party members
+-- Function to apply attack roll boost
 local function ApplyBoost(rollValue)
     Log("═══════════════════════════════════════════════")
     Log(string.format("🎲 APPLYING PHYSICAL DICE ROLL: %d", rollValue))
     Log("═══════════════════════════════════════════════")
 
-    -- Remove old boosts if exist
-    if activeBoostString and #activeBoostedCharacters > 0 then
-        for _, characterGuid in ipairs(activeBoostedCharacters) do
-            Osi.RemoveBoosts(characterGuid, activeBoostString, 1, "", "")
-        end
-        Log(string.format("Removed previous boost from %d party members", #activeBoostedCharacters))
-        activeBoostedCharacters = {}
-    end
+    -- Update the tracked value
+    currentRollValue = rollValue
 
-    -- Apply new boost to ALL party members
-    activeBoostString = CreateBoostString(rollValue)
-    local partyMembers = GetAllPartyMembers()
+    -- Apply combined boost (includes damage if set)
+    ApplyCombinedBoost()
 
-    for _, characterGuid in ipairs(partyMembers) do
-        Osi.AddBoosts(characterGuid, activeBoostString, "", "")
-        table.insert(activeBoostedCharacters, characterGuid)
-    end
-
-    Log(string.format("✅ Boost ACTIVE on %d party members! Roll LOCKED to EXACTLY %d", #activeBoostedCharacters, rollValue))
     Log("📺 CHECK IN-GAME: Next party member dice roll should show EXACTLY " .. rollValue)
     Log("═══════════════════════════════════════════════")
 end
 
--- Function to apply damage boost to ALL party members
+-- Function to apply damage boost
 local function ApplyDamageBoost(damageValue)
     Log("═══════════════════════════════════════════════")
     Log(string.format("💥 APPLYING DAMAGE ROLL: %d", damageValue))
     Log("═══════════════════════════════════════════════")
 
-    -- Remove old damage boosts if exist
-    if activeDamageBoostString and #activeDamageBoostedCharacters > 0 then
-        for _, characterGuid in ipairs(activeDamageBoostedCharacters) do
-            Osi.RemoveBoosts(characterGuid, activeDamageBoostString, 1, "", "")
-        end
-        Log(string.format("Removed previous damage boost from %d party members", #activeDamageBoostedCharacters))
-        activeDamageBoostedCharacters = {}
-    end
+    -- Update the tracked value
+    currentDamageValue = damageValue
 
-    -- Apply new damage boost to ALL party members
-    activeDamageBoostString = CreateDamageBoostString(damageValue)
-    local partyMembers = GetAllPartyMembers()
+    -- Apply combined boost (includes attack roll if set)
+    ApplyCombinedBoost()
 
-    for _, characterGuid in ipairs(partyMembers) do
-        Osi.AddBoosts(characterGuid, activeDamageBoostString, "", "")
-        table.insert(activeDamageBoostedCharacters, characterGuid)
-    end
-
-    Log(string.format("✅ Damage boost ACTIVE on %d party members! Damage LOCKED to EXACTLY %d", #activeDamageBoostedCharacters, damageValue))
     Log("📺 CHECK IN-GAME: Next damage roll should be EXACTLY " .. damageValue)
     Log("═══════════════════════════════════════════════")
 end
@@ -156,13 +175,15 @@ Ext.Osiris.RegisterListener("TurnEnded", 1, "after", function(characterGuid)
     end
 
     -- Remove boost at turn end (from all party members)
-    if #activeBoostedCharacters > 0 and activeBoostString then
+    if #activeBoostedCharacters > 0 and activeCombinedBoostString then
         for _, boostedCharacter in ipairs(activeBoostedCharacters) do
-            Osi.RemoveBoosts(boostedCharacter, activeBoostString, 1, "", "")
+            Osi.RemoveBoosts(boostedCharacter, activeCombinedBoostString, 1, "", "")
         end
-        Log(string.format("✅ Boost removed at end of turn from %d party members", #activeBoostedCharacters))
+        Log(string.format("✅ Combined boost removed at end of turn from %d party members", #activeBoostedCharacters))
         activeBoostedCharacters = {}
-        activeBoostString = nil
+        activeCombinedBoostString = nil
+        currentRollValue = nil
+        currentDamageValue = nil
         BroadcastStatus("Turn ended - boost removed")
     end
 end)
@@ -207,7 +228,7 @@ Ext.RegisterConsoleCommand("setroll", function(cmd, value)
     Log(string.format("✓ Physical dice roll set to: %d", rollValue))
 
     -- Apply boost immediately - works even when loading mid-combat
-    Log("⚡ Applying boost IMMEDIATELY to ALL party members!")
+    Log("⚡ Applying combined boost IMMEDIATELY to ALL party members!")
     ApplyBoost(rollValue)
     BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
 end)
@@ -228,7 +249,7 @@ Ext.Osiris.RegisterListener("StartAttack", 4, "after", function(target, attacker
             pendingAttackData[attackerOwner] = {
                 attacker = attackerName,
                 target = targetName,
-                expectedRoll = activeBoostString and activeBoostString:match("MinimumRollResult%(Attack,(%d+)%)") or "?"
+                expectedRoll = currentRollValue or "?"
             }
             break
         end
@@ -237,20 +258,11 @@ end)
 
 -- Remove boost after first attack (one-shot mode)
 Ext.Osiris.RegisterListener("AttackedBy", 7, "after", function(defender, attackerOwner, attacker2, damageType, damageAmount, damageCause, storyActionID)
-    -- Check if the attacker has an active attack boost
-    local attackerHadAttackBoost = false
+    -- Check if the attacker has an active boost
+    local attackerHadBoost = false
     for _, boostedCharacter in ipairs(activeBoostedCharacters) do
         if attackerOwner == boostedCharacter then
-            attackerHadAttackBoost = true
-            break
-        end
-    end
-
-    -- Check if the attacker has an active damage boost
-    local attackerHadDamageBoost = false
-    for _, boostedCharacter in ipairs(activeDamageBoostedCharacters) do
-        if attackerOwner == boostedCharacter then
-            attackerHadDamageBoost = true
+            attackerHadBoost = true
             break
         end
     end
@@ -266,33 +278,27 @@ Ext.Osiris.RegisterListener("AttackedBy", 7, "after", function(defender, attacke
         pendingAttackData[attackerOwner] = nil
     end
 
-    -- Remove attack boost if needed (one-shot mode)
-    if attackerHadAttackBoost and #activeBoostedCharacters > 0 then
+    -- Remove combined boost if needed (one-shot mode)
+    if attackerHadBoost and #activeBoostedCharacters > 0 then
         Ext.Timer.WaitFor(100, function()
-            if #activeBoostedCharacters > 0 and activeBoostString then
-                -- Remove attack boost from ALL party members
+            if #activeBoostedCharacters > 0 and activeCombinedBoostString then
+                -- Remove combined boost from ALL party members
                 for _, boostedCharacter in ipairs(activeBoostedCharacters) do
-                    Osi.RemoveBoosts(boostedCharacter, activeBoostString, 1, "", "")
+                    Osi.RemoveBoosts(boostedCharacter, activeCombinedBoostString, 1, "", "")
                 end
-                Log("✅ Attack boost removed after attack (one-shot mode)")
-                activeBoostedCharacters = {}
-                activeBoostString = nil
-                BroadcastStatus("Attack completed - attack boost removed")
-            end
-        end)
-    end
 
-    -- Remove damage boost if needed (one-shot mode)
-    if attackerHadDamageBoost and #activeDamageBoostedCharacters > 0 then
-        Ext.Timer.WaitFor(100, function()
-            if #activeDamageBoostedCharacters > 0 and activeDamageBoostString then
-                -- Remove damage boost from ALL party members
-                for _, boostedCharacter in ipairs(activeDamageBoostedCharacters) do
-                    Osi.RemoveBoosts(boostedCharacter, activeDamageBoostString, 1, "", "")
-                end
-                Log("✅ Damage boost removed after attack (one-shot mode)")
-                activeDamageBoostedCharacters = {}
-                activeDamageBoostString = nil
+                local hadRoll = currentRollValue ~= nil
+                local hadDamage = currentDamageValue ~= nil
+
+                Log("✅ Combined boost removed after attack (one-shot mode)")
+                if hadRoll then Log("  └─ Attack roll boost cleared") end
+                if hadDamage then Log("  └─ Damage boost cleared") end
+
+                activeBoostedCharacters = {}
+                activeCombinedBoostString = nil
+                currentRollValue = nil
+                currentDamageValue = nil
+                BroadcastStatus("Attack completed - all boosts removed")
             end
         end)
     end
@@ -301,9 +307,17 @@ end)
 -- Register command to check current stored roll value
 Ext.RegisterConsoleCommand("checkroll", function(cmd)
     if #activeBoostedCharacters > 0 then
+        local statusParts = {}
+        if currentRollValue then
+            table.insert(statusParts, string.format("Attack Roll=%d", currentRollValue))
+        end
+        if currentDamageValue then
+            table.insert(statusParts, string.format("Damage=%d", currentDamageValue))
+        end
         Log(string.format("⚡ Boost is CURRENTLY ACTIVE on %d party members", #activeBoostedCharacters))
+        Log("   Active values: " .. table.concat(statusParts, ", "))
     else
-        Log("No boost currently active. Use !setroll <number> to apply one.")
+        Log("No boost currently active. Use !setroll <number> or !setdamage <number> to apply one.")
     end
 end)
 
@@ -311,13 +325,15 @@ end)
 Ext.RegisterConsoleCommand("clearroll", function(cmd)
     local hadSomething = false
 
-    if #activeBoostedCharacters > 0 and activeBoostString then
+    if #activeBoostedCharacters > 0 and activeCombinedBoostString then
         for _, boostedCharacter in ipairs(activeBoostedCharacters) do
-            Osi.RemoveBoosts(boostedCharacter, activeBoostString, 1, "", "")
+            Osi.RemoveBoosts(boostedCharacter, activeCombinedBoostString, 1, "", "")
         end
-        Log(string.format("Cleared active boost from %d party members", #activeBoostedCharacters))
+        Log(string.format("Cleared combined boost from %d party members", #activeBoostedCharacters))
         activeBoostedCharacters = {}
-        activeBoostString = nil
+        activeCombinedBoostString = nil
+        currentRollValue = nil
+        currentDamageValue = nil
         hadSomething = true
     end
 
@@ -356,13 +372,19 @@ end)
 
 -- Register command to clear damage boost
 Ext.RegisterConsoleCommand("cleardamage", function(cmd)
-    if #activeDamageBoostedCharacters > 0 and activeDamageBoostString then
-        for _, boostedCharacter in ipairs(activeDamageBoostedCharacters) do
-            Osi.RemoveBoosts(boostedCharacter, activeDamageBoostString, 1, "", "")
+    if currentDamageValue then
+        currentDamageValue = nil
+
+        -- Re-apply combined boost (may now only have attack roll, or be nil)
+        if activeCombinedBoostString and #activeBoostedCharacters > 0 then
+            for _, boostedCharacter in ipairs(activeBoostedCharacters) do
+                Osi.RemoveBoosts(boostedCharacter, activeCombinedBoostString, 1, "", "")
+            end
+            activeBoostedCharacters = {}
         end
-        Log(string.format("Cleared damage boost from %d party members", #activeDamageBoostedCharacters))
-        activeDamageBoostedCharacters = {}
-        activeDamageBoostString = nil
+
+        ApplyCombinedBoost()
+        Log("Cleared damage boost")
     else
         Log("No damage boost to clear")
     end
@@ -390,13 +412,15 @@ Ext.RegisterNetListener("PhysicalDiceCommand", function(channel, payload, userId
         BroadcastStatus(string.format("Boost ACTIVE! Roll locked to %d", rollValue))
 
     elseif data.command == "clearroll" then
-        if #activeBoostedCharacters > 0 and activeBoostString then
+        if #activeBoostedCharacters > 0 and activeCombinedBoostString then
             for _, boostedCharacter in ipairs(activeBoostedCharacters) do
-                Osi.RemoveBoosts(boostedCharacter, activeBoostString, 1, "", "")
+                Osi.RemoveBoosts(boostedCharacter, activeCombinedBoostString, 1, "", "")
             end
-            Log(string.format("UI: Cleared active boost from %d party members", #activeBoostedCharacters))
+            Log(string.format("UI: Cleared combined boost from %d party members", #activeBoostedCharacters))
             activeBoostedCharacters = {}
-            activeBoostString = nil
+            activeCombinedBoostString = nil
+            currentRollValue = nil
+            currentDamageValue = nil
         end
 
         if nextRollValue then
@@ -418,13 +442,19 @@ Ext.RegisterNetListener("PhysicalDiceCommand", function(channel, payload, userId
         ApplyDamageBoost(damageValue)
 
     elseif data.command == "cleardamage" then
-        if #activeDamageBoostedCharacters > 0 and activeDamageBoostString then
-            for _, boostedCharacter in ipairs(activeDamageBoostedCharacters) do
-                Osi.RemoveBoosts(boostedCharacter, activeDamageBoostString, 1, "", "")
+        if currentDamageValue then
+            currentDamageValue = nil
+
+            -- Re-apply combined boost (may now only have attack roll, or be nil)
+            if activeCombinedBoostString and #activeBoostedCharacters > 0 then
+                for _, boostedCharacter in ipairs(activeBoostedCharacters) do
+                    Osi.RemoveBoosts(boostedCharacter, activeCombinedBoostString, 1, "", "")
+                end
+                activeBoostedCharacters = {}
             end
-            Log(string.format("UI: Cleared damage boost from %d party members", #activeDamageBoostedCharacters))
-            activeDamageBoostedCharacters = {}
-            activeDamageBoostString = nil
+
+            ApplyCombinedBoost()
+            Log("UI: Cleared damage boost")
         end
     end
 end)
@@ -491,13 +521,15 @@ _G.PhysicalDice = {
     ClearRoll = function()
         local hadSomething = false
 
-        if #activeBoostedCharacters > 0 and activeBoostString then
+        if #activeBoostedCharacters > 0 and activeCombinedBoostString then
             for _, boostedCharacter in ipairs(activeBoostedCharacters) do
-                Osi.RemoveBoosts(boostedCharacter, activeBoostString, 1, "", "")
+                Osi.RemoveBoosts(boostedCharacter, activeCombinedBoostString, 1, "", "")
             end
-            Log(string.format("API: Cleared active boost from %d party members", #activeBoostedCharacters))
+            Log(string.format("API: Cleared combined boost from %d party members", #activeBoostedCharacters))
             activeBoostedCharacters = {}
-            activeBoostString = nil
+            activeCombinedBoostString = nil
+            currentRollValue = nil
+            currentDamageValue = nil
             hadSomething = true
         end
 
@@ -531,13 +563,19 @@ _G.PhysicalDice = {
     ClearDamage = function()
         local hadSomething = false
 
-        if #activeDamageBoostedCharacters > 0 and activeDamageBoostString then
-            for _, boostedCharacter in ipairs(activeDamageBoostedCharacters) do
-                Osi.RemoveBoosts(boostedCharacter, activeDamageBoostString, 1, "", "")
+        if currentDamageValue then
+            currentDamageValue = nil
+
+            -- Re-apply combined boost (may now only have attack roll, or be nil)
+            if activeCombinedBoostString and #activeBoostedCharacters > 0 then
+                for _, boostedCharacter in ipairs(activeBoostedCharacters) do
+                    Osi.RemoveBoosts(boostedCharacter, activeCombinedBoostString, 1, "", "")
+                end
+                activeBoostedCharacters = {}
             end
-            Log(string.format("API: Cleared damage boost from %d party members", #activeDamageBoostedCharacters))
-            activeDamageBoostedCharacters = {}
-            activeDamageBoostString = nil
+
+            ApplyCombinedBoost()
+            Log("API: Cleared damage boost")
             hadSomething = true
         end
 
@@ -548,11 +586,12 @@ _G.PhysicalDice = {
     GetStatus = function()
         return {
             hasActiveBoost = #activeBoostedCharacters > 0,
-            hasActiveDamageBoost = #activeDamageBoostedCharacters > 0,
+            hasActiveDamageBoost = currentDamageValue ~= nil,
             hasQueuedRoll = nextRollValue ~= nil,
             queuedValue = nextRollValue,
+            currentRollValue = currentRollValue,
+            currentDamageValue = currentDamageValue,
             activeBoostedCharacters = activeBoostedCharacters,
-            activeDamageBoostedCharacters = activeDamageBoostedCharacters,
             currentTurnCharacter = currentTurnCharacter
         }
     end
@@ -561,25 +600,29 @@ _G.PhysicalDice = {
 Log("Physical Dice Input System Loaded!")
 Log("")
 Log("═══════════════════════════════════════════════")
-Log("🎲 PHYSICAL DICE MOD - READY")
+Log("🎲 PHYSICAL DICE MOD v1.2.1-COMBINED (2026-01-30)")
+Log("   Build: Combined Boost System (NO INTERFERENCE)")
+Log("   Script Extender: v29")
 Log("═══════════════════════════════════════════════")
 Log("Commands:")
-Log("  !setroll <1-20>  - Set your physical dice roll")
-Log("  !checkroll       - Check current boost status")
-Log("  !clearroll       - Clear boost/queued value")
+Log("  !setroll <1-20>    - Set your physical dice roll")
+Log("  !setdamage <1-80>  - Set your physical damage roll")
+Log("  !checkroll         - Check current boost status")
+Log("  !clearroll         - Clear all boosts")
+Log("  !cleardamage       - Clear damage boost only")
 Log("")
 Log("HOW TO USE:")
 Log("  Option 1 - MCM (If installed):")
 Log("    - Press ESC > Mod Configuration Menu")
 Log("    - Select 'Physical Dice Mod'")
-Log("    - Use slider or hotkeys (F9/F10)")
+Log("    - Use sliders and buttons")
 Log("")
 Log("  Option 2 - Console Commands:")
 Log("    1. Your turn starts")
-Log("    2. Roll your physical d20 (e.g., you get 15)")
-Log("    3. Press F3 and type: !setroll 15")
-Log("    4. Boost applies INSTANTLY")
-Log("    5. Make your attack - roll will be EXACTLY 15")
+Log("    2. Roll your physical dice")
+Log("    3. Press F3 and type: !setroll 15 (for attack)")
+Log("    4. Or type: !setdamage 50 (for damage)")
+Log("    5. Make your attack/spell - values locked!")
 Log("")
-Log("NOTE: Boost locks roll to EXACT value using Min+Max")
+Log("NEW: Combined boost system - no interference!")
 Log("═══════════════════════════════════════════════")

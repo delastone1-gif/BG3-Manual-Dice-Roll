@@ -28,10 +28,7 @@
               "Name": "Apply",
               "Type": "event_button",
               "Options": {
-                "Label": "Apply",
-                "Icon": {
-                  "Name": "Skill_Fighter_ActionSurge"
-                }
+                "Label": "Apply"
               },
               "Description": "",
               "Tooltip": "Click to apply current slider value"
@@ -41,10 +38,7 @@
               "Name": "1",
               "Type": "event_button",
               "Options": {
-                "Label": "1",
-                "Icon": {
-                  "Name": "Spell_Necromancy_InflictWounds"
-                }
+                "Label": "1"
               },
               "Description": "",
               "Tooltip": "Critical fail"
@@ -54,10 +48,7 @@
               "Name": "10",
               "Type": "event_button",
               "Options": {
-                "Label": "10",
-                "Icon": {
-                  "Name": "Spell_Divination_Guidance"
-                }
+                "Label": "10"
               },
               "Description": "",
               "Tooltip": "Average"
@@ -67,10 +58,7 @@
               "Name": "20",
               "Type": "event_button",
               "Options": {
-                "Label": "20",
-                "Icon": {
-                  "Name": "Spell_Evocation_MagicMissile"
-                }
+                "Label": "20"
               },
               "Description": "",
               "Tooltip": "Critical success"
@@ -166,10 +154,7 @@
               "Name": "Apply Damage",
               "Type": "event_button",
               "Options": {
-                "Label": "Apply",
-                "Icon": {
-                  "Name": "Spell_Evocation_MagicMissile"
-                }
+                "Label": "Apply"
               },
               "Description": "",
               "Tooltip": "Click to apply current damage value"
@@ -179,10 +164,7 @@
               "Name": "10",
               "Type": "event_button",
               "Options": {
-                "Label": "10",
-                "Icon": {
-                  "Name": "Spell_Conjuration_MinorConjuration"
-                }
+                "Label": "10"
               },
               "Description": "",
               "Tooltip": "Quick damage: 10"
@@ -192,10 +174,7 @@
               "Name": "40",
               "Type": "event_button",
               "Options": {
-                "Label": "40",
-                "Icon": {
-                  "Name": "Spell_Evocation_Fireball"
-                }
+                "Label": "40"
               },
               "Description": "",
               "Tooltip": "Quick damage: 40 (average 5d8)"
@@ -205,10 +184,7 @@
               "Name": "80",
               "Type": "event_button",
               "Options": {
-                "Label": "80",
-                "Icon": {
-                  "Name": "Spell_Evocation_ChainLightning"
-                }
+                "Label": "80"
               },
               "Description": "",
               "Tooltip": "Quick damage: 80 (max 10d8)"

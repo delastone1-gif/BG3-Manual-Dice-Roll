@@ -3,6 +3,9 @@
 # Build artifacts
 *.pak
 
+# Development directories (keep local only)
+v1.2.0-dev/
+
 # Claude Code directory (DO NOT commit)
 .claude/
 
@@ -46,3 +49,15 @@ build.bat
 BUILD.md
 pack_mod.sh
 PACKING_MODS.md
+
+# Nexus publishing files (keep local only)
+NEXUS_DESCRIPTION_*.txt
+NEXUS_FILE_DESCRIPTION.txt
+NEXUS_FILE_NAME.txt
+download.jpg
+dices.png
+
+# Documentation files (keep local only, except README.md)
+*.md
+*.txt
+!README.md
