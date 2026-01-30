@@ -60,4 +60,5 @@ dices.png
 # Documentation files (keep local only, except README.md)
 *.md
 *.txt
+*.html
 !README.md
