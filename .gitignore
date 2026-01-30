@@ -5,6 +5,7 @@
 
 # Development directories (keep local only)
 v1.2.0-dev/
+Mod to Investigate/
 
 # Claude Code directory (DO NOT commit)
 .claude/
