@@ -1,5 +1,0 @@
-{
-  "RequiredVersion": 29,
-  "ModTable": "PhysicalDiceMod",
-  "FeatureFlags": ["Lua"]
-}
